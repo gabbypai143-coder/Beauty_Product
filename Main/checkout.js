@@ -73,15 +73,20 @@ const getValidCartItems = (rawCart) => {
             const qty = Number(item?.qty ?? item?.quantity ?? 0);
             const title = String(item?.title ?? item?.name ?? item?.productName ?? '').trim();
             const id = String(item?.id ?? item?.productId ?? item?._id ?? '').trim();
+            const rawW = Number(item?.weight_kg ?? item?.weight);
+            const weight = Number.isFinite(rawW) && rawW > 0 ? rawW : 0.20;
             return {
                 ...item,
                 qty,
                 title,
                 id,
+                weight,
+                weight_kg: weight,
             };
         })
         .filter((item) => item.title && item.id && Number.isFinite(item.qty) && item.qty > 0);
 };
+
 
 function showCheckoutToast(message, durationMs = 2400) {
     const text = String(message || '').trim();
@@ -128,12 +133,128 @@ const fileToBase64 = (file) => new Promise((resolve, reject) => {
     reader.readAsDataURL(file);
 });
 
-const getShippingRate = (region) => {
+const compressImage = (file) => new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) return resolve(file);
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            // Resize if larger than 1200px
+            const maxSize = 1200;
+            if (width > height && width > maxSize) {
+                height = Math.round((height * maxSize) / width);
+                width = maxSize;
+            } else if (height > maxSize) {
+                width = Math.round((width * maxSize) / height);
+                height = maxSize;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return resolve(file);
+            
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob((blob) => {
+                if (!blob || blob.size > file.size) return resolve(file);
+                const compressedFile = new File([blob], file.name, { type: file.type });
+                resolve(compressedFile);
+            }, file.type, 0.85);
+        };
+        img.onerror = () => resolve(file);
+        img.src = String(e.target?.result || '');
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+});
+
+// J&T Express Heavy Parcel Rates (3.01 kg to 10.00 kg)
+const getHeavyParcelRate = (weight) => {
+    const w = Number(weight) || 0;
+    if (w > 3.00 && w <= 4.00) return 200;
+    if (w > 4.00 && w <= 5.00) return 220;
+    if (w > 5.00 && w <= 6.00) return 255;
+    if (w > 6.00 && w <= 7.00) return 295;
+    if (w > 7.00 && w <= 8.00) return 335;
+    if (w > 8.00 && w <= 9.00) return 375;
+    if (w > 9.00 && w <= 10.00) return 415;
+    return null;
+};
+
+// Regional standard base rates for Small Parcels (<= 3.00 kg)
+const getRegionalBaseRate = (region) => {
     const r = String(region || '').trim();
     if (!r) return 0;
-    if (r === 'NCR') return 89;
-    if (r === 'Region IV-A' || r === 'Region III') return 109;
-    return 129;
+    const rates = {
+        'NCR': 105,
+        'CAR': 105,
+        'Region I': 105,
+        'Region II': 105,
+        'Region III': 105,
+        'Region IV-A': 105,
+        'Region IV-B': 115,
+        'Region V': 105,
+        'Region VI': 105,
+        'Region VII': 105,
+        'Region VIII': 105,
+        'Region IX': 85,
+        'Region X': 85,
+        'Region XI': 85,
+        'Region XII': 85,
+        'Region XIII': 85,
+        'BARMM': 115
+    };
+    return rates[r] || (r ? 105 : 0);
+};
+
+// Calculate aggregate parcel weight dynamically: Total Weight = sum(Product Weight * Quantity)
+const calculateTotalWeight = (items) => {
+    const list = Array.isArray(items) ? items : [];
+    let total = 0;
+    list.forEach((item) => {
+        const qty = Number(item?.qty ?? item?.quantity ?? 1);
+        const q = Number.isFinite(qty) && qty > 0 ? qty : 1;
+        const rawW = Number(item?.weight_kg ?? item?.weight);
+        const weight = Number.isFinite(rawW) && rawW > 0 ? rawW : 0.20;
+        total += weight * q;
+    });
+    return Math.round(total * 100) / 100;
+};
+
+// Calculate dynamic shipping breakdown according to J&T Express structure
+const calculateCheckoutShipping = (region, weight, subtotal) => {
+    const w = Number(weight) || 0;
+    const sub = Number(subtotal) || 0;
+    const isOverLimit = w > 10.00;
+
+    let baseRate = 0;
+    if (w > 3.00 && w <= 10.00) {
+        baseRate = getHeavyParcelRate(w) || 0;
+    } else {
+        baseRate = getRegionalBaseRate(region);
+    }
+
+    // J&T Assurance / Insurance Fee: ceil(Subtotal / 500) * 5
+    const insuranceFee = sub > 0 ? Math.ceil(sub / 500) * 5 : 0;
+    const totalShipping = baseRate + insuranceFee;
+
+    return {
+        totalWeight: Math.round(w * 100) / 100,
+        baseRate,
+        insuranceFee,
+        totalShipping,
+        isOverLimit
+    };
+};
+
+const getShippingRate = (region, weight = 0, subtotal = 0) => {
+    const details = calculateCheckoutShipping(region, weight, subtotal);
+    return details.totalShipping;
 };
 
 const setFieldError = (inputEl, message) => {
@@ -249,7 +370,9 @@ function showOrderSuccessModal(order) {
     const totalEl = qs('#receipt-total', modal);
     const itemsEl = qs('#receipt-items', modal);
     const subtotalEl = qs('#receipt-subtotal', modal);
+    const weightEl = qs('#receipt-weight', modal);
     const shippingEl = qs('#receipt-shipping', modal);
+    const insuranceEl = qs('#receipt-insurance', modal);
 
     const pricing = order && typeof order === 'object' ? (order.pricing && typeof order.pricing === 'object' ? order.pricing : {}) : {};
     const itemsRaw = Array.isArray(order?.items) ? order.items : [];
@@ -272,6 +395,16 @@ function showOrderSuccessModal(order) {
         0
     );
     const shipping = Number.isFinite(shippingFee) ? shippingFee : 0;
+    const baseShipping = Number.isFinite(Number(order?.baseShippingFee))
+        ? Number(order.baseShippingFee)
+        : (Number.isFinite(Number(pricing?.baseShipping)) ? Number(pricing.baseShipping) : shipping);
+    const insurance = Number.isFinite(Number(order?.insuranceFee))
+        ? Number(order.insuranceFee)
+        : (Number.isFinite(Number(pricing?.insurance)) ? Number(pricing.insurance) : 0);
+    const weightVal = Number.isFinite(Number(order?.totalWeight))
+        ? Number(order.totalWeight)
+        : (Number.isFinite(Number(pricing?.totalWeight)) ? Number(pricing.totalWeight) : 0);
+
     const total = Number(
         order?.total ??
         order?.total_amount ??
@@ -289,7 +422,9 @@ function showOrderSuccessModal(order) {
     if (paymentEl) paymentEl.textContent = method || '—';
     if (totalEl) totalEl.textContent = formatCurrency(totalFinal);
     if (subtotalEl) subtotalEl.textContent = formatCurrency(subtotal);
-    if (shippingEl) shippingEl.textContent = formatCurrency(shipping);
+    if (weightEl) weightEl.textContent = `${weightVal.toFixed(2)} kg`;
+    if (shippingEl) shippingEl.textContent = formatCurrency(baseShipping);
+    if (insuranceEl) insuranceEl.textContent = formatCurrency(insurance);
 
     if (itemsEl) {
         itemsEl.innerHTML = items.length
@@ -422,7 +557,15 @@ function initPaymentMethods() {
             const nameEl = qs(`[data-upload-name-for="${input.id}"]`);
             if (!nameEl) return;
             const file = input.files && input.files[0];
-            nameEl.textContent = file ? `Attached: ${file.name}` : 'No file chosen';
+            if (file) {
+                const safeName = String(file.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                nameEl.innerHTML = `<span style="color: #2ea76f; display: inline-flex; align-items: center; gap: 4px; font-weight: 500;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Attached: ${safeName}
+                </span>`;
+            } else {
+                nameEl.textContent = 'No file chosen';
+            }
         });
     });
 
@@ -433,6 +576,7 @@ function initPaymentMethods() {
 function validateShippingStep() {
     const firstName = qs('#first-name');
     const lastName = qs('#last-name');
+    const email = qs('#email');
     const phone = qs('#phone');
     const region = qs('#region');
     const city = qs('#city');
@@ -459,6 +603,7 @@ function validateShippingStep() {
     const required = [
         [firstName, 'Please enter your first name.'],
         [lastName, 'Please enter your last name.'],
+        [email, 'Please enter your email address.'],
         [region, 'Please select your region/province.'],
         [city, 'Please enter your city/municipality.'],
         [barangay, 'Please enter your barangay.'],
@@ -500,9 +645,19 @@ function validateShippingStep() {
         } catch {
             // ignore
         }
+        return false;
     }
 
-    return ok;
+    const snap = readCheckoutSnapshot();
+    const source = (snap && Array.isArray(snap.items) && snap.items.length) ? snap.items : readCartCompat();
+    const liveCart = getValidCartItems(source);
+    const totalWeight = calculateTotalWeight(liveCart);
+    if (totalWeight > 10.00) {
+        window.alert("Package exceeds maximum parcel weight of 10.00 kg. Please split items into two separate orders.");
+        return false;
+    }
+
+    return true;
 }
 
 function setCheckoutStep(step) {
@@ -521,19 +676,21 @@ function setCheckoutStep(step) {
     }
 }
 
-function renderSummary(cart) {
+function renderSummary(rawCart) {
+    const cart = getValidCartItems(rawCart);
     const itemsWrap = qs('#summary-items');
     const subtotalEl = qs('#summary-subtotal');
+    const weightEl = qs('#summary-weight');
     const shippingEl = qs('#summary-shipping');
+    const insuranceEl = qs('#summary-insurance');
     const totalEl = qs('#summary-total');
+    const warningEl = qs('#summary-weight-warning');
     const regionEl = qs('#region');
 
-    const snapshot = readCheckoutSnapshot();
-
-    const computedSubtotal = cart.reduce((sum, it) => sum + (parsePriceToNumber(it.price) * (Number(it.qty) || 0)), 0);
-    const subtotal = (snapshot && Number.isFinite(Number(snapshot.subtotal))) ? Number(snapshot.subtotal) : computedSubtotal;
-    const shipping = getShippingRate(regionEl?.value);
-    const total = subtotal + shipping;
+    const subtotal = cart.reduce((sum, it) => sum + (parsePriceToNumber(it.price) * (Number(it.qty) || 0)), 0);
+    const totalWeight = calculateTotalWeight(cart);
+    const shippingData = calculateCheckoutShipping(regionEl?.value, totalWeight, subtotal);
+    const grandTotal = subtotal + shippingData.totalShipping;
 
     if (itemsWrap) {
         itemsWrap.innerHTML = '';
@@ -541,16 +698,23 @@ function renderSummary(cart) {
             const row = document.createElement('div');
             row.className = 'summaryItem';
             const qty = Number(item.qty) || 1;
+            const w = Number(item.weight_kg ?? item.weight ?? 0.20);
+            const unitWeight = Number.isFinite(w) && w > 0 ? w : 0.20;
+            const itemTotalWeight = (unitWeight * qty).toFixed(2);
             row.innerHTML = `
                 <div class="summaryItem__thumb" data-qty="${qty}">
                     <div class="checkoutSummaryThumbWrap">
                         <img class="checkoutSummaryThumbImg" src="${String(item.img || '')}" alt="${String(item.title || '')}" />
-                        <span class="checkoutSummaryQtyBadge">${qty}</span>
                     </div>
                 </div>
                 <div class="summaryItem__meta">
                     <div class="summaryItem__title">${String(item.title || '')}</div>
-                    <div class="summaryItem__line">Qty ${String(qty)}</div>
+                    <div class="summaryItem__weight" style="font-size:0.75rem; color:#888;">${unitWeight.toFixed(2)} kg each (${itemTotalWeight} kg total)</div>
+                    <div class="summaryItem__line" style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                        <button type="button" class="qty-btn" data-action="decrease" data-id="${item.id}" style="width: 24px; height: 24px; border: 1px solid #ccc; background: #fff; cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold;">-</button>
+                        <span class="qty-val" style="font-weight: 600; min-width: 16px; text-align: center;">${qty}</span>
+                        <button type="button" class="qty-btn" data-action="increase" data-id="${item.id}" style="width: 24px; height: 24px; border: 1px solid #ccc; background: #fff; cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold;">+</button>
+                    </div>
                 </div>
                 <div class="summaryItem__price">${formatCurrency(parsePriceToNumber(item.price) * (Number(item.qty) || 0))}</div>
             `;
@@ -559,8 +723,74 @@ function renderSummary(cart) {
     }
 
     if (subtotalEl) subtotalEl.textContent = formatCurrency(subtotal);
-    if (shippingEl) shippingEl.textContent = formatCurrency(shipping);
-    if (totalEl) totalEl.textContent = formatCurrency(total);
+    if (weightEl) {
+        weightEl.textContent = `${totalWeight.toFixed(2)} kg`;
+        weightEl.style.color = shippingData.isOverLimit ? '#d92550' : '';
+        weightEl.style.fontWeight = shippingData.isOverLimit ? '700' : '';
+    }
+    if (shippingEl) shippingEl.textContent = formatCurrency(shippingData.baseRate);
+    if (insuranceEl) insuranceEl.textContent = formatCurrency(shippingData.insuranceFee);
+    if (totalEl) totalEl.textContent = formatCurrency(grandTotal);
+
+    if (warningEl) {
+        warningEl.style.display = shippingData.isOverLimit ? 'block' : 'none';
+    }
+
+    const proceedBtnEl = qs('#proceed-to-payment');
+    const submitBtnEl = qs('.checkoutPlaceOrder');
+    if (shippingData.isOverLimit) {
+        if (proceedBtnEl) {
+            proceedBtnEl.classList.add('is-disabled');
+            proceedBtnEl.setAttribute('aria-disabled', 'true');
+        }
+        if (submitBtnEl) {
+            submitBtnEl.classList.add('is-disabled');
+            submitBtnEl.setAttribute('aria-disabled', 'true');
+        }
+    } else {
+        if (proceedBtnEl) {
+            proceedBtnEl.classList.remove('is-disabled');
+            proceedBtnEl.removeAttribute('aria-disabled');
+        }
+        if (submitBtnEl) {
+            submitBtnEl.classList.remove('is-disabled');
+            submitBtnEl.removeAttribute('aria-disabled');
+        }
+    }
+}
+
+function updateCheckoutCartQty(itemId, change) {
+    const snapshot = readCheckoutSnapshot();
+    const sourceCart = (snapshot && Array.isArray(snapshot.items) && snapshot.items.length)
+        ? snapshot.items
+        : readCartCompat();
+    const liveCart = getValidCartItems(sourceCart);
+    let itemFound = false;
+    let newCart = liveCart.map(item => {
+        if (String(item.id) === String(itemId)) {
+            itemFound = true;
+            let newQty = (Number(item.qty) || 0) + change;
+            if (newQty < 1) newQty = 1;
+            return { ...item, qty: newQty };
+        }
+        return item;
+    });
+
+    if (!itemFound) return;
+
+    localStorage.setItem(CART_KEY, JSON.stringify(newCart));
+    localStorage.setItem('cart', JSON.stringify(newCart));
+
+    const computedSubtotal = newCart.reduce((sum, it) => sum + (parsePriceToNumber(it.price) * (Number(it.qty) || 0)), 0);
+    const updatedSnapshot = {
+        items: newCart,
+        subtotal: computedSubtotal,
+        totalWeight: calculateTotalWeight(newCart),
+        createdAt: new Date().toISOString()
+    };
+    localStorage.setItem(CHECKOUT_SNAPSHOT_KEY, JSON.stringify(updatedSnapshot));
+
+    renderSummary(newCart);
 }
 
 function initCheckout() {
@@ -598,7 +828,7 @@ function initCheckout() {
     const snapshot = readCheckoutSnapshot();
     const liveCart = getValidCartItems(readCartCompat());
 
-    if (!liveCart.length) {
+    if (!liveCart.length && (!snapshot || !snapshot.items || !snapshot.items.length)) {
         const checkoutMain = qs('main.checkout');
         if (checkoutMain) checkoutMain.style.display = 'none';
         notifyEmptyCartAndReturnToStore();
@@ -609,13 +839,67 @@ function initCheckout() {
     const cart = getValidCartItems(rawCart);
     renderSummary(cart);
 
+    const itemsWrap = qs('#summary-items');
+    if (itemsWrap) {
+        itemsWrap.addEventListener('click', (e) => {
+            const btn = e.target.closest('.qty-btn');
+            if (!btn) return;
+            const id = btn.getAttribute('data-id');
+            const action = btn.getAttribute('data-action');
+            if (id) {
+                updateCheckoutCartQty(id, action === 'increase' ? 1 : -1);
+            }
+        });
+    }
+
     initCheckoutNav();
 
     initPaymentMethods();
 
+    // Synchronize product weights directly from database via API
+    try {
+        fetch(`${API_BASE_URL}/products`)
+            .then((res) => (res.ok ? res.json() : []))
+            .then((products) => {
+                if (!Array.isArray(products) || !products.length) return;
+                const weightMap = new Map();
+                products.forEach((p) => {
+                    const w = Number(p?.weight_kg ?? p?.weight);
+                    weightMap.set(Number(p.id), Number.isFinite(w) && w > 0 ? w : 0.20);
+                    weightMap.set(String(p.name || '').trim().toLowerCase(), Number.isFinite(w) && w > 0 ? w : 0.20);
+                });
+                const live = getValidCartItems(readCartCompat());
+                let updated = false;
+                live.forEach((it) => {
+                    const dbW = weightMap.get(Number(it.id)) ?? weightMap.get(String(it.title || it.name || '').trim().toLowerCase());
+                    if (dbW && dbW > 0 && it.weight !== dbW) {
+                        it.weight = dbW;
+                        it.weight_kg = dbW;
+                        updated = true;
+                    }
+                });
+                if (updated) {
+                    localStorage.setItem(CART_KEY, JSON.stringify(live));
+                    localStorage.setItem('cart', JSON.stringify(live));
+                    renderSummary(live);
+                }
+            })
+            .catch(() => {});
+    } catch {
+        // ignore
+    }
+
     if (proceedBtn) {
         proceedBtn.addEventListener('click', () => {
             if (!validateShippingStep()) return;
+            const snap = readCheckoutSnapshot();
+            const source = (snap && Array.isArray(snap.items) && snap.items.length) ? snap.items : readCartCompat();
+            const currentCart = getValidCartItems(source);
+            const totalWeight = calculateTotalWeight(currentCart);
+            if (totalWeight > 10.00) {
+                window.alert("Package exceeds maximum parcel weight of 10.00 kg. Please split items into two separate orders.");
+                return;
+            }
             setCheckoutStep('payment');
         });
     }
@@ -629,7 +913,9 @@ function initCheckout() {
 
     if (regionEl) {
         regionEl.addEventListener('change', () => {
-            renderSummary(readCart());
+            const snap = readCheckoutSnapshot();
+            const source = (snap && Array.isArray(snap.items) && snap.items.length) ? snap.items : readCartCompat();
+            renderSummary(getValidCartItems(source));
         });
     }
 
@@ -674,10 +960,16 @@ function initCheckout() {
             const postal = qs('#postal');
 
         let shipping = 0;
+        let shippingData = { baseRate: 0, insuranceFee: 0, totalShipping: 0, totalWeight: 0, isOverLimit: false };
         let currentCart = [];
         try {
-            shipping = getShippingRate(region?.value);
-            currentCart = getValidCartItems(readCartCompat());
+            const snap = readCheckoutSnapshot();
+            const source = (snap && Array.isArray(snap.items) && snap.items.length) ? snap.items : readCartCompat();
+            currentCart = getValidCartItems(source);
+            const currentTotalWeight = calculateTotalWeight(currentCart);
+            const currentSubtotal = currentCart.reduce((sum, it) => sum + (parsePriceToNumber(it.price) * (Number(it.qty) || 0)), 0);
+            shippingData = calculateCheckoutShipping(region?.value, currentTotalWeight, currentSubtotal);
+            shipping = shippingData.totalShipping;
         } catch (err) {
             console.error('[checkout] failed to read cart/shipping:', err);
             shipping = 0;
@@ -688,6 +980,19 @@ function initCheckout() {
             notifyEmptyCartAndReturnToStore();
             return;
         }
+
+        const totalWeight = calculateTotalWeight(currentCart);
+        if (totalWeight > 10.00) {
+            window.alert("Package exceeds maximum parcel weight of 10.00 kg. Please split items into two separate orders.");
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.textContent = prevSubmitText;
+            }
+            isPlacingOrder = false;
+            return;
+        }
+
         const subtotal = currentCart.reduce((sum, it) => sum + (parsePriceToNumber(it.price) * (Number(it.qty) || 0)), 0);
         const total = subtotal + shipping;
 
@@ -799,7 +1104,17 @@ function initCheckout() {
             date: dateText,
             createdAt: createdAtIso,
             items: currentCart,
-            pricing: { subtotal, shipping, total },
+            pricing: {
+                subtotal,
+                shipping,
+                baseShipping: shippingData.baseRate,
+                insurance: shippingData.insuranceFee,
+                totalWeight: shippingData.totalWeight,
+                total
+            },
+            totalWeight: shippingData.totalWeight,
+            baseShippingFee: shippingData.baseRate,
+            insuranceFee: shippingData.insuranceFee,
             shippingDetails: {
                 firstName: firstNameInput,
                 lastName: lastNameInput,
@@ -830,10 +1145,19 @@ function initCheckout() {
                             return sum + (unit * qty);
                         }, 0);
 
-                        const shippingFeeRaw = Number(getShippingRate(regionValue));
-                        const shippingFee = Number.isFinite(shippingFeeRaw) ? shippingFeeRaw : 0;
+                        const totalWeight = calculateTotalWeight(list);
+                        const shippingBreakdown = calculateCheckoutShipping(regionValue, totalWeight, itemsSubtotal);
+                        const shippingFee = Number.isFinite(shippingBreakdown.totalShipping) ? shippingBreakdown.totalShipping : 0;
                         const total = itemsSubtotal + shippingFee;
-                        return { subtotal: itemsSubtotal, shippingFee, total };
+                        return {
+                            subtotal: itemsSubtotal,
+                            totalWeight,
+                            baseRate: shippingBreakdown.baseRate,
+                            insuranceFee: shippingBreakdown.insuranceFee,
+                            shippingFee,
+                            total,
+                            isOverLimit: shippingBreakdown.isOverLimit
+                        };
                     };
 
                     let apiProducts = [];
@@ -843,7 +1167,7 @@ function initCheckout() {
                     try {
                         const controller = new AbortController();
                         const timeoutId = window.setTimeout(() => controller.abort(), 20000);
-                        const pres = await fetch(`${API_BASE_URL}/api/products`, { signal: controller.signal });
+                        const pres = await fetch(`${API_BASE_URL}/products`, { signal: controller.signal });
                         window.clearTimeout(timeoutId);
                         productsFetchStatus = pres.status;
                         if (pres.ok) {
@@ -871,6 +1195,11 @@ function initCheckout() {
                     }
 
                     const totalsNow = computeCheckoutTotals(items, region?.value);
+
+                    if (totalsNow.isOverLimit || totalsNow.totalWeight > 10.00) {
+                        window.alert('Package exceeds maximum parcel weight of 10.00 kg. Please split items into two separate orders.');
+                        return;
+                    }
 
                     if (!Number.isFinite(totalsNow.subtotal) || totalsNow.subtotal <= 0) {
                         throw new Error('Invalid subtotal. Check cart item prices.');
@@ -1013,6 +1342,7 @@ function initCheckout() {
                     const customerNameSafe = `${firstNameSafe} ${lastNameSafe}`.trim() || String(customerName || 'Guest Customer');
 
                     const phoneSafe = safeVal('phone').trim() || String(phoneValue || '').trim();
+                    const emailSafe = safeVal('email').trim();
 
                     const barangaySafe = safeVal('barangay').trim() || String(barangayText || '').trim();
                     const citySafe = safeVal('city').trim() || String(cityText || '').trim();
@@ -1060,12 +1390,19 @@ function initCheckout() {
                     safeAppend('municipality', citySafe);
                     safeAppend('barangay', barangaySafe);
                     safeAppend('streetAddress', streetDetailSafe);
+                    safeAppend('customerEmail', emailSafe);
                     safeAppend('phone', phoneSafe);
                     safeAppend('userPhone', phoneSafe);
                     safeAppend('paymentMethod', paymentMethodSafe);
                     safeAppend('subtotal', totalsNow.subtotal);
                     safeAppend('shippingFee', totalsNow.shippingFee);
                     safeAppend('shipping_fee', totalsNow.shippingFee);
+                    safeAppend('baseShippingFee', totalsNow.baseRate);
+                    safeAppend('base_shipping_fee', totalsNow.baseRate);
+                    safeAppend('insuranceFee', totalsNow.insuranceFee);
+                    safeAppend('insurance_fee', totalsNow.insuranceFee);
+                    safeAppend('totalWeight', totalsNow.totalWeight);
+                    safeAppend('total_weight', totalsNow.totalWeight);
                     safeAppend('total', totalsNow.total);
                     safeAppend('total_amount', totalsNow.total);
                     safeAppend('items', JSON.stringify(
@@ -1086,7 +1423,10 @@ function initCheckout() {
                             };
                         })
                     ));
-                    if (receiptFile) formData.append('receipt', receiptFile);
+                    if (receiptFile) {
+                        const compressedReceipt = await compressImage(receiptFile);
+                        formData.append('receipt', compressedReceipt);
+                    }
                     } catch (err) {
                         console.error('[checkout] failed assembling FormData:', err);
                         throw err;
@@ -1107,14 +1447,14 @@ function initCheckout() {
                     }
 
                     console.log('[checkout] posting order to API', {
-                        url: `${API_BASE_URL}/api/orders`,
+                        url: `${API_BASE_URL}/orders`,
                         paymentMethod: paymentMethodKey,
                         itemsCount: currentCart.length,
                         hasReceipt: Boolean(receiptFile)
                     });
 
                     const token = localStorage.getItem('jammailavskin_token');
-                    const res = await fetch(`${API_BASE_URL}/api/orders`, {
+                    const res = await fetch(`${API_BASE_URL}/orders`, {
                         method: 'POST',
                         headers: token ? { 'Authorization': `Bearer ${token}` } : undefined,
                         body: formData
@@ -1161,10 +1501,20 @@ function initCheckout() {
 
                     const successOrderData = {
                         ...newOrderPayload,
-                        pricing: { subtotal: totalsNow.subtotal, shipping: totalsNow.shippingFee, total: totalsNow.total },
+                        pricing: {
+                            subtotal: totalsNow.subtotal,
+                            shipping: totalsNow.shippingFee,
+                            baseShipping: totalsNow.baseRate,
+                            insurance: totalsNow.insuranceFee,
+                            totalWeight: totalsNow.totalWeight,
+                            total: totalsNow.total
+                        },
                         subtotal: totalsNow.subtotal,
                         shippingFee: totalsNow.shippingFee,
                         shipping_fee: totalsNow.shippingFee,
+                        baseShippingFee: totalsNow.baseRate,
+                        insuranceFee: totalsNow.insuranceFee,
+                        totalWeight: totalsNow.totalWeight,
                         total: totalsNow.total,
                         total_amount: totalsNow.total,
                         ...(data || {})

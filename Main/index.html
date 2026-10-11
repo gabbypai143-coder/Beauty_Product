@@ -25,7 +25,9 @@
                 <a class="nav__link" href="#shop">Shop</a>
                 <a class="nav__link" href="#benefits">About</a>
                 <a class="nav__link" href="#footer">Contact</a>
-</div>
+                <a class="nav__link" href="#" onclick="openTrackingModal(event)">Track Parcel</a>
+                <a class="nav__link" href="#" id="openShippingGuideLink" onclick="openShippingGuideModal(event)">Shipping Fee Guide</a>
+            </div>
 
             <button class="nav__cart" type="button" aria-label="Shopping bag" data-cart-open>
                 <span class="nav__cartIcon" aria-hidden="true">
@@ -147,14 +149,8 @@
                 </div>
 
                 <section class="shop-section" data-product-rail-layer="1" data-products-key="storeProducts">
-                    <div class="shopTabs">
-                        <div class="shopTabs__track">
-                            <button class="shopTabs__btn is-active" type="button" data-target="all">ALL PRODUCTS</button>
-                            <button class="shopTabs__btn" type="button" data-target="individual">INDIVIDUAL PRODUCT</button>
-                            <button class="shopTabs__btn" type="button" data-target="set">SET PRODUCT</button>
-                            <button class="shopTabs__btn" type="button" data-target="package">PACKAGE PRODUCT</button>
-                            <div class="shopTabs__indicator" aria-hidden="true"></div>
-                        </div>
+                    <div class="shopTabs" style="text-align: center; margin-bottom: 2rem;">
+                        <h3 style="color: var(--accent); font-weight: bold; font-size: 1.2rem; letter-spacing: 1px; border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 8px;">ALL PRODUCTS</h3>
                     </div>
 
                     <div class="productRail__wrapper" style="position: relative;">
@@ -193,7 +189,7 @@
             <div class="footer__contact" aria-label="Contact channels">
                 <a href="https://www.facebook.com/charlize.therone.568" target="_blank" rel="noopener">Facebook</a>
                 <a href="tel:09518529400">+09518529400</a>
-                <a href="mailto:rhodoralogronio732@gmail.com">rhodoralogronio732@gmail.com</a>
+                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=rhodoralogronio732@gmail.com" target="_blank" rel="noopener">rhodoralogronio732@gmail.com</a>
             </div>
 
             <div class="footer__fine">  Jammaila Skin. All rights reserved.<br />
@@ -204,7 +200,7 @@
 
     <div id="product-modal" class="product-modal-overlay">
         <div class="modal-card">
-            <button class="modal-close-btn">&times;</button>
+            <button type="button" class="modal-close-btn" aria-label="Close product modal">&times;</button>
             <div class="modal-body-grid">
                 <div class="modal-left-col">
                     <div class="modal-image-wrapper">
@@ -244,23 +240,38 @@
     <div id="cart-sidebar-overlay" class="cart-overlay">
         <div class="cart-drawer">
             <div class="cart-header">
-                <h2>CART (<span id="cart-count-display">0</span> items)</h2>
-                <button class="cart-close-btn">&times;</button>
+                <div class="cart-header-title-wrap">
+                    <span class="cart-header-icon" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 0 1-2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
+                        </svg>
+                    </span>
+                    <h2>CART (<span id="cart-count-display">0</span> ITEMS)</h2>
+                </div>
+                <button type="button" class="cart-close-btn" aria-label="Close cart">&times;</button>
             </div>
             <div id="cart-items-container" class="cart-items-list">
             </div>
             <div class="cart-footer">
                 <div class="cart-subtotal-row">
-                    <span>Total:</span>
+                    <span class="cart-total-label">Total:</span>
                     <span id="cart-total-price">₱ 0.00</span>
                 </div>
                 <div class="cart-terms-container">
                     <label class="cart-terms-label">
                         <input type="checkbox" id="cart-terms-checkbox">
-                        <span>By checking out, you agree to Jammaila Skin's <a href="#" class="terms-link">Terms &amp; Conditions</a>.</span>
+                        <span class="cart-terms-text">By checking out, you agree to Jammaila Skin's <a href="#" class="terms-link">Terms &amp; Conditions</a>.</span>
                     </label>
                 </div>
-                <button class="cart-checkout-btn">CHECKOUT</button>
+                <button type="button" class="cart-checkout-btn">
+                    <span>CHECKOUT</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
@@ -298,8 +309,1417 @@
         </div>
     </div>
 
-    <script src="config.js?v=2"></script>
-    <script src="./landing.js?v=6"></script>
-</body>
+    <script src="config.js?v=20261008_3"></script>
+    <script src="./landing.js?v=20261008_3"></script>
+    <!-- Order Tracking Modal -->
+    <div id="trackingModal" class="track-modal-overlay" style="display:none;" aria-hidden="true" role="dialog" aria-labelledby="trackingModalTitle">
+        <div class="track-modal-dialog">
+            <!-- Modal Close Button -->
+            <button type="button" class="track-modal-close" onclick="closeTrackingModal(event)" aria-label="Close tracking modal">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
 
+            <!-- Modal Header -->
+            <div class="track-modal-header">
+                <div class="track-modal-badge">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="3" width="15" height="13"></rect>
+                        <polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon>
+                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                    </svg>
+                    <span>Delivery Tracker</span>
+                </div>
+                <h2 id="trackingModalTitle" class="track-modal-title">Track Your Parcel</h2>
+                <p id="trackingModalSubtitle" class="track-modal-subtitle">Enter your Order ID or phone number to check your real-time order status.</p>
+            </div>
+
+            <!-- Modal Body Container -->
+            <div class="track-modal-body">
+                <!-- Search Card -->
+                <form id="trackingForm" class="track-search-card" onsubmit="handleTrackOrder(event)">
+                    <label for="trackInput" class="track-input-label">Order ID or Mobile Number</label>
+                    <div class="track-input-wrap">
+                        <span class="track-input-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </span>
+                        <input type="text" id="trackInput" class="track-input-field" placeholder="e.g. 1 or 09171234567" required autocomplete="off" />
+                    </div>
+                    <button type="submit" class="track-submit-btn" id="trackBtn">
+                        <span>Check Order Status</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                    <p class="track-search-hint">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        <span>You can find your Order ID in your SMS notification or checkout confirmation.</span>
+                    </p>
+                </form>
+
+                <!-- Tracking Result Container -->
+                <div id="trackResult" class="track-result-container" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* === Luxury Order Tracking Modal Styles === */
+        .track-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10050;
+            background: rgba(16, 16, 16, 0.65);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            box-sizing: border-box;
+            opacity: 0;
+            transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .track-modal-overlay.is-active {
+            display: flex !important;
+            opacity: 1;
+        }
+        .track-modal-dialog {
+            position: relative;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            max-height: 90dvh;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(212, 163, 115, 0.22);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+            transform: translateY(14px) scale(0.98);
+            transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .track-modal-overlay.is-active .track-modal-dialog {
+            transform: translateY(0) scale(1);
+        }
+        .track-modal-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid rgba(16, 16, 16, 0.08);
+            background: #fbf7f3;
+            color: #333333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: background 0.18s ease, transform 0.18s ease, color 0.18s ease;
+        }
+        .track-modal-close:hover {
+            background: #f1e6da;
+            transform: scale(1.05);
+            color: #111111;
+        }
+        .track-modal-header {
+            padding: 24px 24px 16px;
+            background: linear-gradient(180deg, #fffcf9 0%, #ffffff 100%);
+            border-bottom: 1px solid rgba(212, 163, 115, 0.18);
+            box-sizing: border-box;
+        }
+        .track-modal-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(212, 163, 115, 0.15);
+            color: #8a5832;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 8px;
+        }
+        .track-modal-title {
+            margin: 0 0 4px;
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.55rem;
+            color: #1a1a1a;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        .track-modal-subtitle {
+            margin: 0;
+            color: #666666;
+            font-size: 0.88rem;
+            line-height: 1.4;
+        }
+        .track-modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px 24px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            scrollbar-width: thin;
+            scrollbar-color: #d4a373 #f8f6f3;
+        }
+        .track-modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        .track-modal-body::-webkit-scrollbar-track {
+            background: #fbf9f6;
+            border-radius: 4px;
+        }
+        .track-modal-body::-webkit-scrollbar-thumb {
+            background: #d4a373;
+            border-radius: 4px;
+        }
+
+        /* Search Card Form */
+        .track-search-card {
+            background: #fcfaf8;
+            border: 1px solid rgba(212, 163, 115, 0.22);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-sizing: border-box;
+        }
+        .track-input-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #333333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .track-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .track-input-icon {
+            position: absolute;
+            left: 14px;
+            color: #8a5832;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+        }
+        .track-input-field {
+            width: 100%;
+            height: 48px;
+            padding: 0 16px 0 44px;
+            border: 1.5px solid #e2d7cc;
+            border-radius: 12px;
+            font-size: 16px;
+            color: #1a1a1a;
+            background: #ffffff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        .track-input-field:focus {
+            outline: none;
+            border-color: #8a5832;
+            box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.25);
+        }
+        .track-submit-btn {
+            height: 48px;
+            border: none;
+            border-radius: 12px;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background 0.18s, transform 0.15s, box-shadow 0.18s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            font-family: inherit;
+        }
+        .track-submit-btn:hover {
+            background: #8a5832;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(138, 88, 50, 0.25);
+        }
+        .track-submit-btn:active {
+            transform: translateY(0);
+        }
+        .track-submit-btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .track-search-hint {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            font-size: 0.78rem;
+            color: #777777;
+            margin: 0;
+            line-height: 1.4;
+        }
+        .track-search-hint svg {
+            flex-shrink: 0;
+            margin-top: 2px;
+            color: #8a5832;
+        }
+
+        /* Result Container & Sub-Cards */
+        .track-result-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .track-card {
+            background: #ffffff;
+            border: 1px solid rgba(212, 163, 115, 0.2);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+            box-sizing: border-box;
+        }
+        .track-status-card {
+            background: linear-gradient(180deg, #ffffff 0%, #fcfaf8 100%);
+        }
+        .track-status-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 18px;
+            gap: 12px;
+        }
+        .track-order-eyebrow {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #8a5832;
+            letter-spacing: 0.6px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .track-order-id {
+            margin: 0;
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.4rem;
+            color: #1a1a1a;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+        .track-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            flex-shrink: 0;
+        }
+        .track-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: trackPulse 2s infinite ease-in-out;
+        }
+        @keyframes trackPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.45; transform: scale(0.85); }
+        }
+        .status-pending { background: #f3f4f6; color: #4b5563; }
+        .status-processing { background: #fef3c7; color: #92400e; }
+        .status-shipped { background: #e0f2fe; color: #0369a1; }
+        .status-delivered { background: #dcfce7; color: #15803d; }
+
+        /* Stepper */
+        .track-stepper-wrap {
+            position: relative;
+            margin: 14px 0 4px;
+            padding: 0 4px;
+        }
+        .track-stepper-track {
+            position: absolute;
+            top: 14px;
+            left: 24px;
+            right: 24px;
+            height: 3px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            z-index: 1;
+        }
+        .track-stepper-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #1a1a1a, #8a5832);
+            border-radius: 3px;
+            transition: width 0.45s ease;
+        }
+        .track-stepper-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            z-index: 2;
+        }
+        .track-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 64px;
+            gap: 6px;
+        }
+        .track-step-node {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2.5px solid #d1d5db;
+            color: #9ca3af;
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .track-step.is-completed .track-step-node {
+            background: #1a1a1a;
+            border-color: #1a1a1a;
+            color: #ffffff;
+        }
+        .track-step.is-current .track-step-node {
+            background: #8a5832;
+            border-color: #8a5832;
+            color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(212, 163, 115, 0.3);
+        }
+        .track-step-label {
+            font-size: 0.74rem;
+            color: #6b7280;
+            font-weight: 500;
+            line-height: 1.2;
+            transition: color 0.2s;
+        }
+        .track-step.is-completed .track-step-label {
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+        .track-step.is-current .track-step-label {
+            color: #8a5832;
+            font-weight: 700;
+        }
+
+        /* Card Header inside sub-cards */
+        .track-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 8px;
+        }
+        .track-card-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .track-card-icon {
+            font-size: 1.05rem;
+            line-height: 1;
+        }
+        .track-card-title {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            font-family: inherit;
+        }
+        .track-count-badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            background: #f3f4f6;
+            color: #4b5563;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        /* Shipping Card */
+        .track-courier-tag {
+            padding: 4px 10px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 999px;
+        }
+        .track-waybill-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fbf8f5;
+            border: 1px solid #ebdccb;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            gap: 10px;
+        }
+        .track-waybill-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        .track-waybill-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            color: #8a5832;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+        }
+        .track-waybill-num {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            letter-spacing: 0.5px;
+            word-break: break-all;
+        }
+        .track-copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            background: #ffffff;
+            border: 1px solid #d4a373;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #8a5832;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+        .track-copy-btn:hover {
+            background: #8a5832;
+            color: #ffffff;
+        }
+        .track-courier-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 11px 16px;
+            background: #1a1a1a;
+            color: #ffffff;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            box-sizing: border-box;
+            transition: background 0.18s, transform 0.15s;
+        }
+        .track-courier-btn:hover {
+            background: #8a5832;
+            transform: translateY(-1px);
+        }
+
+        /* Items List Card */
+        .track-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 190px;
+            overflow-y: auto;
+            padding-right: 4px;
+            scrollbar-width: thin;
+            scrollbar-color: #d4a373 #f8f6f3;
+        }
+        .track-item-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 10px;
+            background: #fdfbf9;
+            border: 1px solid #f1e9df;
+            border-radius: 10px;
+            transition: background 0.15s;
+        }
+        .track-item-row:hover {
+            background: #f8f3ec;
+        }
+        .track-item-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #ebdccb;
+            color: #8a5832;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .track-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .track-item-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .track-item-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 2px;
+        }
+        .track-item-variant {
+            font-size: 0.74rem;
+            color: #777777;
+        }
+        .track-item-qty {
+            font-size: 0.72rem;
+            color: #555555;
+            background: #ede3d7;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .track-item-price {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            white-space: nowrap;
+        }
+
+        /* Payment Card */
+        .track-payment-card {
+            background: linear-gradient(180deg, #fdfbf7 0%, #f9f5ed 100%);
+            border: 1px solid #ebdccb;
+        }
+        .track-pay-status-pill {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .pay-paid { background: #dcfce7; color: #15803d; }
+        .pay-failed { background: #fee2e2; color: #b91c1c; }
+        .pay-pending { background: #fef3c7; color: #b45309; }
+        .track-pay-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .track-pay-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #555555;
+        }
+        .track-pay-val {
+            font-weight: 600;
+            color: #222222;
+        }
+        .track-pay-divider {
+            height: 1px;
+            border-top: 1px dashed #d4a373;
+            margin: 4px 0;
+            opacity: 0.6;
+        }
+        .track-total-row {
+            margin-top: 4px;
+            padding-top: 6px;
+            border-top: 1px solid #ebdccb;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #1a1a1a;
+        }
+        .track-total-val {
+            color: #8a5832;
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        /* Actions */
+        .track-actions-card {
+            display: flex;
+            gap: 10px;
+            margin-top: 2px;
+        }
+        .track-action-btn {
+            height: 44px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            font-family: inherit;
+        }
+        .track-action-secondary {
+            flex: 1;
+            background: #ffffff;
+            border: 1.5px solid #d4a373;
+            color: #8a5832;
+        }
+        .track-action-secondary:hover {
+            background: #8a5832;
+            color: #ffffff;
+        }
+        .track-action-close {
+            flex: 0 0 85px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            color: #4b5563;
+        }
+        .track-action-close:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        /* Error Card */
+        .track-error-card {
+            text-align: center;
+            padding: 24px 16px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 16px;
+        }
+        .track-error-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        .track-error-title {
+            margin: 0 0 6px;
+            font-size: 1.1rem;
+            color: #991b1b;
+            font-weight: 700;
+        }
+        .track-error-msg {
+            margin: 0;
+            font-size: 0.86rem;
+            color: #7f1d1d;
+            line-height: 1.4;
+        }
+
+        /* Responsive Mobile Styling */
+        @media (max-width: 600px) {
+            .track-modal-overlay {
+                padding: 16px;
+                align-items: center;
+                justify-content: center;
+            }
+            .track-modal-dialog {
+                max-height: 88vh;
+                max-height: 88dvh;
+                border-radius: 20px;
+            }
+            .track-modal-header {
+                padding: 20px 18px 12px;
+            }
+            .track-modal-title {
+                font-size: 1.35rem;
+            }
+            .track-modal-body {
+                padding: 14px 16px 20px;
+                gap: 12px;
+            }
+            .track-search-card {
+                padding: 16px;
+            }
+            .track-card {
+                padding: 14px;
+            }
+            .track-stepper-wrap {
+                margin: 10px 0 2px;
+            }
+            .track-stepper-track {
+                left: 18px;
+                right: 18px;
+                top: 13px;
+            }
+            .track-step {
+                width: auto;
+                flex: 1;
+            }
+            .track-step-node {
+                width: 26px;
+                height: 26px;
+                font-size: 0.68rem;
+            }
+            .track-step-label {
+                font-size: 0.68rem;
+                letter-spacing: -0.2px;
+            }
+            .track-order-id {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+
+    <script>
+        function openTrackingModal(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            const modal = document.getElementById('trackingModal');
+            if (!modal) return;
+            
+            modal.style.display = 'flex';
+            void modal.offsetWidth; // Force reflow for smooth transition
+            modal.classList.add('is-active');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('is-modal-open');
+            
+            resetTrackingView();
+            setTimeout(() => {
+                const inp = document.getElementById('trackInput');
+                if (inp) inp.focus();
+            }, 120);
+        }
+
+        function closeTrackingModal(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            const modal = document.getElementById('trackingModal');
+            if (!modal) return;
+            
+            modal.classList.remove('is-active');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('is-modal-open');
+            setTimeout(() => {
+                if (!modal.classList.contains('is-active')) {
+                    modal.style.display = 'none';
+                }
+            }, 240);
+        }
+
+        function resetTrackingView() {
+            const form = document.getElementById('trackingForm');
+            const result = document.getElementById('trackResult');
+            const input = document.getElementById('trackInput');
+            const subTitle = document.getElementById('trackingModalSubtitle');
+            
+            if (form) form.style.display = 'flex';
+            if (result) {
+                result.style.display = 'none';
+                result.innerHTML = '';
+            }
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+            if (subTitle) {
+                subTitle.textContent = 'Enter your Order ID or phone number to check your real-time order status.';
+            }
+        }
+
+        function escapeTrackHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function copyWaybill(code, btn) {
+            if (!code) return;
+            const updateBtn = () => {
+                if (!btn) return;
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = `
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Copied!</span>
+                `;
+                btn.style.borderColor = '#166534';
+                btn.style.color = '#166534';
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }, 2000);
+            };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(updateBtn).catch(() => fallbackCopyWaybill(code, updateBtn));
+            } else {
+                fallbackCopyWaybill(code, updateBtn);
+            }
+        }
+
+        function fallbackCopyWaybill(text, callback) {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                if (callback) callback();
+            } catch (e) {
+                console.warn('Clipboard copy failed:', e);
+            }
+        }
+
+        function initTrackingModalEvents() {
+            const modal = document.getElementById('trackingModal');
+            if (!modal) return;
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeTrackingModal(e);
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('is-active')) {
+                    closeTrackingModal(e);
+                }
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initTrackingModalEvents);
+        } else {
+            initTrackingModalEvents();
+        }
+
+        async function handleTrackOrder(e) {
+            e.preventDefault();
+            const input = document.getElementById('trackInput').value.trim();
+            if (!input) return;
+
+            const btn = document.getElementById('trackBtn');
+            const resultContainer = document.getElementById('trackResult');
+            const form = document.getElementById('trackingForm');
+            const subTitle = document.getElementById('trackingModalSubtitle');
+
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: trackSpin 1s linear infinite;">
+                    <line x1="12" y1="2" x2="12" y2="6"></line>
+                    <line x1="12" y1="18" x2="12" y2="22"></line>
+                    <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                    <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                    <line x1="2" y1="12" x2="6" y2="12"></line>
+                    <line x1="18" y1="12" x2="22" y2="12"></line>
+                    <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                    <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+                </svg>
+                <span>Checking Status...</span>
+            `;
+
+            resultContainer.innerHTML = '';
+
+            try {
+                const API_URL = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : '';
+                const res = await fetch(`${API_URL}/api/orders/track?query=${encodeURIComponent(input)}`);
+
+                const contentType = res.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    form.style.display = 'none';
+                    resultContainer.style.display = 'flex';
+                    resultContainer.innerHTML = `
+                        <div class="track-error-card">
+                            <div class="track-error-icon">⚠️</div>
+                            <h4 class="track-error-title">Server Connection Error</h4>
+                            <p class="track-error-msg">Unexpected response from server. Please try again shortly.</p>
+                            <button type="button" class="track-action-btn track-action-secondary" onclick="resetTrackingView()" style="margin-top:14px; width:auto; padding:0 20px;">
+                                Try Again
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const data = await res.json();
+
+                form.style.display = 'none';
+                resultContainer.style.display = 'flex';
+
+                if (!res.ok) {
+                    resultContainer.innerHTML = `
+                        <div class="track-error-card">
+                            <div class="track-error-icon">🔍</div>
+                            <h4 class="track-error-title">Order Not Found</h4>
+                            <p class="track-error-msg">${escapeTrackHtml(data.error || 'No matching order found for the provided details. Please verify your Order ID or phone number.')}</p>
+                            <button type="button" class="track-action-btn track-action-secondary" onclick="resetTrackingView()" style="margin-top:14px; width:auto; padding:0 20px;">
+                                Try Another Search
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    if (subTitle) {
+                        subTitle.textContent = `Live tracking details for Order #${data.id}`;
+                    }
+                    renderTrackingTimeline(data, resultContainer);
+                }
+            } catch (err) {
+                console.error('Tracking fetch error:', err);
+                form.style.display = 'none';
+                resultContainer.style.display = 'flex';
+                resultContainer.innerHTML = `
+                    <div class="track-error-card">
+                        <div class="track-error-icon">📡</div>
+                        <h4 class="track-error-title">Network Connection Error</h4>
+                        <p class="track-error-msg">Unable to reach the server. Please check your internet connection and try again.</p>
+                        <button type="button" class="track-action-btn track-action-secondary" onclick="resetTrackingView()" style="margin-top:14px; width:auto; padding:0 20px;">
+                            Retry Search
+                        </button>
+                    </div>
+                `;
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `
+                        <span>Check Order Status</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    `;
+                }
+            }
+        }
+
+        function renderTrackingTimeline(info, container) {
+            const steps = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+            let currentStatus = info.orderStatus || info.status || 'Pending';
+
+            if (String(currentStatus).toLowerCase() === 'completed') currentStatus = 'Delivered';
+
+            let currentIndex = steps.findIndex(s => s.toLowerCase() === currentStatus.toLowerCase());
+            if (currentIndex === -1) currentIndex = 0;
+
+            const displaySteps = ['Placed', 'Verified', 'Shipped', 'Delivered'];
+            const progressMap = [12, 45, 78, 100];
+            const progressPercent = progressMap[currentIndex] !== undefined ? progressMap[currentIndex] : 12;
+
+            const stepsHtml = displaySteps.map((step, index) => {
+                const isCompleted = index < currentIndex;
+                const isCurrent = index === currentIndex;
+                const stepClass = isCurrent ? 'is-current' : (isCompleted ? 'is-completed' : 'is-upcoming');
+                const iconContent = isCompleted ? `
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>` : (index + 1);
+                return `
+                    <div class="track-step ${stepClass}">
+                        <div class="track-step-node" aria-hidden="true">${iconContent}</div>
+                        <span class="track-step-label">${step}</span>
+                    </div>
+                `;
+            }).join('');
+
+            let statusPillClass = 'status-pending';
+            const sLower = currentStatus.toLowerCase();
+            if (sLower === 'delivered') statusPillClass = 'status-delivered';
+            else if (sLower === 'shipped') statusPillClass = 'status-shipped';
+            else if (sLower === 'processing' || sLower === 'verified') statusPillClass = 'status-processing';
+
+            // Status Card
+            const statusCardHtml = `
+                <div class="track-card track-status-card">
+                    <div class="track-status-head">
+                        <div>
+                            <span class="track-order-eyebrow">Order Reference</span>
+                            <h3 class="track-order-id">Order #${escapeTrackHtml(info.id)}</h3>
+                        </div>
+                        <div class="track-status-pill ${statusPillClass}">
+                            <span class="track-status-dot"></span>
+                            <span>${escapeTrackHtml(currentStatus)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="track-stepper-wrap">
+                        <div class="track-stepper-track">
+                            <div class="track-stepper-bar" style="width: ${progressPercent}%;"></div>
+                        </div>
+                        <div class="track-stepper-steps">
+                            ${stepsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Shipping Logistics Card (Courier Info)
+            let shippingCardHtml = '';
+            if (currentIndex >= 2 && info.courier_name && info.tracking_number) {
+                let courierUrl = '#';
+                const cName = info.courier_name.toLowerCase();
+                if (cName.includes('j&t')) courierUrl = 'https://www.jtexpress.ph/index/query/gzquery.html';
+                else if (cName.includes('flash')) courierUrl = 'https://www.flashexpress.ph/tracking/';
+                else if (cName.includes('lbc')) courierUrl = 'https://www.lbcexpress.com/track/';
+                else if (cName.includes('gogo')) courierUrl = 'https://app.gogoexpress.com/track/';
+
+                shippingCardHtml = `
+                    <div class="track-card track-shipping-card">
+                        <div class="track-card-header">
+                            <div class="track-card-title-wrap">
+                                <span class="track-card-icon">🚚</span>
+                                <h4 class="track-card-title">Dispatch & Logistics</h4>
+                            </div>
+                            <span class="track-courier-tag">${escapeTrackHtml(info.courier_name)}</span>
+                        </div>
+                        <div class="track-waybill-row">
+                            <div class="track-waybill-info">
+                                <span class="track-waybill-label">Waybill Tracking Number</span>
+                                <span class="track-waybill-num">${escapeTrackHtml(info.tracking_number)}</span>
+                            </div>
+                            <button type="button" class="track-copy-btn" onclick="copyWaybill('${escapeTrackHtml(info.tracking_number)}', this)" aria-label="Copy tracking number">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                <span>Copy</span>
+                            </button>
+                        </div>
+                        <a href="${courierUrl}" target="_blank" rel="noopener noreferrer" class="track-courier-btn">
+                            <span>Track on Official Courier Website</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                        </a>
+                    </div>
+                `;
+            }
+
+            // Ordered Items Card
+            let itemsCardHtml = '';
+            if (info.items && Array.isArray(info.items) && info.items.length > 0) {
+                const itemsList = info.items.map(item => {
+                    const qty = Number(item.quantity || 1);
+                    const unitPrice = Number(item.price || item.unitPrice || 0);
+                    const lineTotal = unitPrice * qty;
+                    return `
+                        <div class="track-item-row">
+                            <div class="track-item-avatar">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                                </svg>
+                            </div>
+                            <div class="track-item-info">
+                                <span class="track-item-name" title="${escapeTrackHtml(item.productName || 'Beauty Product')}">${escapeTrackHtml(item.productName || 'Beauty Product')}</span>
+                                <div class="track-item-meta">
+                                    ${item.variant ? `<span class="track-item-variant">${escapeTrackHtml(item.variant)}</span>` : ''}
+                                    <span class="track-item-qty">Qty: ${qty}</span>
+                                </div>
+                            </div>
+                            <div class="track-item-price">
+                                ₱${lineTotal.toFixed(2)}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                itemsCardHtml = `
+                    <div class="track-card track-items-card">
+                        <div class="track-card-header">
+                            <div class="track-card-title-wrap">
+                                <span class="track-card-icon">🛍️</span>
+                                <h4 class="track-card-title">Ordered Items</h4>
+                            </div>
+                            <span class="track-count-badge">${info.items.length} ${info.items.length === 1 ? 'item' : 'items'}</span>
+                        </div>
+                        <div class="track-items-list">
+                            ${itemsList}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Payment Summary Card (Dynamic Calculations with fallbacks)
+            let subtotal = 0;
+            if (info.items && Array.isArray(info.items) && info.items.length > 0) {
+                subtotal = info.items.reduce((sum, it) => sum + (Number(it.price || it.unitPrice || 0) * Number(it.quantity || 1)), 0);
+            } else if (info.subtotal) {
+                subtotal = Number(info.subtotal);
+            }
+            const shippingFee = Number(info.shippingFee || 0);
+            const total = subtotal + shippingFee;
+
+            const pStatus = String(info.paymentStatus || 'Pending');
+            let payStatusClass = 'pay-pending';
+            if (pStatus.toLowerCase() === 'paid') payStatusClass = 'pay-paid';
+            else if (pStatus.toLowerCase() === 'failed') payStatusClass = 'pay-failed';
+
+            const paymentCardHtml = `
+                <div class="track-card track-payment-card">
+                    <div class="track-card-header">
+                        <div class="track-card-title-wrap">
+                            <span class="track-card-icon">💳</span>
+                            <h4 class="track-card-title">Payment Summary</h4>
+                        </div>
+                        <span class="track-pay-status-pill ${payStatusClass}">${escapeTrackHtml(pStatus)}</span>
+                    </div>
+                    <div class="track-pay-rows">
+                        <div class="track-pay-row">
+                            <span class="track-pay-label">Payment Method</span>
+                            <span class="track-pay-val">${escapeTrackHtml(info.paymentMethod || 'Cash on Delivery')}</span>
+                        </div>
+                        <div class="track-pay-divider"></div>
+                        <div class="track-pay-row">
+                            <span class="track-pay-label">Subtotal</span>
+                            <span class="track-pay-val">₱${subtotal.toFixed(2)}</span>
+                        </div>
+                        <div class="track-pay-row">
+                            <span class="track-pay-label">Shipping Fee</span>
+                            <span class="track-pay-val">₱${shippingFee.toFixed(2)}</span>
+                        </div>
+                        <div class="track-pay-row track-total-row">
+                            <span class="track-total-label">Total Amount</span>
+                            <span class="track-total-val">₱${total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Action Buttons Card
+            const actionsHtml = `
+                <div class="track-actions-card">
+                    <button type="button" class="track-action-btn track-action-secondary" onclick="resetTrackingView()">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <polyline points="23 20 23 14 17 14"></polyline>
+                            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                        </svg>
+                        <span>Track Another Order</span>
+                    </button>
+                    <button type="button" class="track-action-btn track-action-close" onclick="closeTrackingModal(event)">
+                        <span>Close</span>
+                    </button>
+                </div>
+            `;
+
+            container.innerHTML = `
+                ${statusCardHtml}
+                ${shippingCardHtml}
+                ${itemsCardHtml}
+                ${paymentCardHtml}
+                ${actionsHtml}
+            `;
+        }
+    </script>
+    <!-- Shipping Fee Guide Modal -->
+    <div id="shippingGuideModal" class="shipping-guide-overlay" style="display:none;" aria-hidden="true" role="dialog" aria-labelledby="shippingGuideTitle">
+        <div class="shipping-guide-modal">
+            <button type="button" class="shipping-guide-close" id="closeShippingGuideBtn" aria-label="Close shipping fee guide">&times;</button>
+            
+            <div class="shipping-guide-header">
+                <span class="shipping-guide-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                    Official Courier: J&T Express
+                </span>
+                <h2 id="shippingGuideTitle" class="shipping-guide-title">Shipping Fee Guide</h2>
+                <p class="shipping-guide-subtitle">Official J&T Express delivery rates and parcel weight guidelines nationwide.</p>
+            </div>
+
+            <div class="shipping-guide-content">
+                <!-- Small Parcels -->
+                <div class="shipping-guide-card">
+                    <div class="shipping-guide-card-header">
+                        <div class="shipping-guide-card-icon">📦</div>
+                        <div>
+                            <h3 class="shipping-guide-card-title">Small Parcels</h3>
+                            <span class="shipping-guide-card-tag">Up to 3.00 kg</span>
+                        </div>
+                    </div>
+                    <p class="shipping-guide-card-desc">
+                        Uses regional base rates calculated based on shipping destination:
+                    </p>
+                    <div class="shipping-guide-pill-grid">
+                        <div class="shipping-guide-pill">
+                            <span class="shipping-guide-pill-label">Mindanao (Base Rate)</span>
+                            <span class="shipping-guide-pill-price">₱85</span>
+                        </div>
+                        <div class="shipping-guide-pill">
+                            <span class="shipping-guide-pill-label">NCR / Luzon / Visayas</span>
+                            <span class="shipping-guide-pill-price">₱105 – ₱115</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Heavy Parcels -->
+                <div class="shipping-guide-card">
+                    <div class="shipping-guide-card-header">
+                        <div class="shipping-guide-card-icon">⚖️</div>
+                        <div>
+                            <h3 class="shipping-guide-card-title">Heavy Parcels</h3>
+                            <span class="shipping-guide-card-tag">3.01 kg to 10.00 kg</span>
+                        </div>
+                    </div>
+                    <p class="shipping-guide-card-desc">
+                        Tiered weight structure for larger or multi-item shipments:
+                    </p>
+                    <div class="shipping-guide-table-wrap">
+                        <table class="shipping-guide-table">
+                            <thead>
+                                <tr>
+                                    <th>Parcel Weight</th>
+                                    <th style="text-align: right;">Shipping Fee</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>3.01 kg – 4.00 kg</td>
+                                    <td class="shipping-guide-rate">₱200</td>
+                                </tr>
+                                <tr>
+                                    <td>4.01 kg – 5.00 kg</td>
+                                    <td class="shipping-guide-rate">₱220</td>
+                                </tr>
+                                <tr>
+                                    <td>5.01 kg – 6.00 kg</td>
+                                    <td class="shipping-guide-rate">₱255</td>
+                                </tr>
+                                <tr>
+                                    <td>6.01 kg – 7.00 kg</td>
+                                    <td class="shipping-guide-rate">₱295</td>
+                                </tr>
+                                <tr>
+                                    <td>7.01 kg – 8.00 kg</td>
+                                    <td class="shipping-guide-rate">₱335</td>
+                                </tr>
+                                <tr>
+                                    <td>8.01 kg – 9.00 kg</td>
+                                    <td class="shipping-guide-rate">₱375</td>
+                                </tr>
+                                <tr>
+                                    <td>9.01 kg – 10.00 kg</td>
+                                    <td class="shipping-guide-rate">₱415</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Assurance Fee & Maximum Limit -->
+                <div class="shipping-guide-info-grid">
+                    <div class="shipping-guide-info-item">
+                        <div class="shipping-guide-info-title">
+                            <span class="shipping-guide-info-icon">🛡️</span> Assurance / Insurance Fee
+                        </div>
+                        <p class="shipping-guide-info-text">
+                            Standard fee of <strong>₱5</strong> for every <strong>₱500</strong> worth of declared item value.
+                        </p>
+                    </div>
+                    <div class="shipping-guide-info-item">
+                        <div class="shipping-guide-info-title">
+                            <span class="shipping-guide-info-icon">⚠️</span> Maximum Parcel Limit
+                        </div>
+                        <p class="shipping-guide-info-text">
+                            Single parcels cannot exceed <strong>10.00 kg</strong>. Larger orders are packed in multiple boxes.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="shipping-guide-footer">
+                <button type="button" class="shipping-guide-action-btn" id="dismissShippingGuideBtn">Close Guide</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function initShippingGuideModal() {
+            const modal = document.getElementById('shippingGuideModal');
+            if (!modal) return;
+
+            const openBtns = document.querySelectorAll('#openShippingGuideLink, [data-shipping-guide-open]');
+            const closeBtns = document.querySelectorAll('#closeShippingGuideBtn, #dismissShippingGuideBtn, .shipping-guide-close');
+
+            function openModal(e) {
+                if (e && e.preventDefault) e.preventDefault();
+                modal.style.display = 'flex';
+                void modal.offsetWidth;
+                modal.classList.add('is-active');
+                modal.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('is-modal-open');
+            }
+
+            function closeModal(e) {
+                if (e && e.preventDefault) e.preventDefault();
+                modal.classList.remove('is-active');
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('is-modal-open');
+                setTimeout(function() {
+                    if (!modal.classList.contains('is-active')) {
+                        modal.style.display = 'none';
+                    }
+                }, 250);
+            }
+
+            window.openShippingGuideModal = openModal;
+            window.closeShippingGuideModal = closeModal;
+
+            openBtns.forEach(function(btn) {
+                btn.addEventListener('click', openModal);
+            });
+
+            closeBtns.forEach(function(btn) {
+                btn.addEventListener('click', closeModal);
+            });
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal(e);
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('is-active')) {
+                    closeModal(e);
+                }
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initShippingGuideModal);
+        } else {
+            initShippingGuideModal();
+        }
+    </script>
+</body>
 </html>

@@ -1,6 +1,8 @@
 const express = require("express");
 
 const cors = require("cors");
+const crypto = require("crypto");
+const { dispatchOrderEmails } = require("./mailer");
 const bcrypt = require("bcrypt");
 const { PrismaClient } = require("@prisma/client");
 const path = require("path");
@@ -37,6 +39,11 @@ const FRONTEND_ORIGIN_RAW = process.env.FRONTEND_ORIGIN;
 const FRONTEND_ORIGIN = FRONTEND_ORIGIN_RAW
   ? String(FRONTEND_ORIGIN_RAW).trim().replace(/\/+$/, "")
   : "";
+const EXTRA_ALLOWED_ORIGINS = String(process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean)
+  .map((value) => value.replace(/\/+$/, ""));
 
 const ADMIN_USERNAME = String(process.env.ADMIN_USERNAME || "").trim();
 const ADMIN_PASSWORD = String(process.env.ADMIN_PASSWORD || "");
@@ -81,23 +88,34 @@ if (!isProd) {
   allowedOrigins.add("http://localhost:8080");
   allowedOrigins.add("http://127.0.0.1:8080");
   allowedOrigins.add("http://10.0.0.199:8080");
+  allowedOrigins.add("http://localhost:3000");
+  allowedOrigins.add("http://127.0.0.1:3000");
+}
+allowedOrigins.add("https://jammailaskin-cassandra.com");
+allowedOrigins.add("https://www.jammailaskin-cassandra.com");
+allowedOrigins.add("https://beauty-product.onrender.com");
+allowedOrigins.add("https://www.beauty-product.onrender.com");
+
+for (const extraOrigin of EXTRA_ALLOWED_ORIGINS) {
+  allowedOrigins.add(extraOrigin);
 }
 
 if (FRONTEND_ORIGIN) {
   allowedOrigins.add(FRONTEND_ORIGIN);
 }
 
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true);
-      if (allowedOrigins.has(origin)) return cb(null, true);
-      return cb(new Error(`CORS blocked for origin: ${origin}`));
-    },
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    credentials: true,
-  })
-);
+const corsMiddleware = cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.has(origin)) return cb(null, true);
+    return cb(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+});
+
+app.use(corsMiddleware);
 
 // Admin: delete order + items
 app.delete(
@@ -146,6 +164,18 @@ app.delete(
         });
       }
 
+      // If no orders remain, reset AUTO_INCREMENT to 1 so the next order starts at #1
+      try {
+        const remainingCount = await withDbRetry(() => prisma.order.count());
+        if (remainingCount === 0) {
+          await withDbRetry(() => prisma.$executeRawUnsafe('ALTER TABLE `order` AUTO_INCREMENT = 1;'));
+          await withDbRetry(() => prisma.$executeRawUnsafe('ALTER TABLE `orderitem` AUTO_INCREMENT = 1;'));
+          console.log("[admin] all orders deleted; reset AUTO_INCREMENT to 1");
+        }
+      } catch (resetErr) {
+        console.warn("[admin] failed to check or reset AUTO_INCREMENT after delete:", resetErr?.message || resetErr);
+      }
+
       return res.status(200).json({
         success: true,
         message: "Order deleted successfully.",
@@ -184,7 +214,62 @@ const receiptsDir = path.join(uploadsDir, "receipts");
 fs.mkdirSync(receiptsDir, { recursive: true });
 
 app.use("/uploads", express.static(uploadsDir));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Public: track order status - placed here above static middleware to prevent HTML fallback intercepting
+app.get(
+  "/api/orders/track",
+  async (req, res) => {
+    try {
+      const queryParam = String(req.query.query || "").trim();
+      if (!queryParam) {
+        return res.status(400).json({ error: "Please provide an Order ID or Phone Number." });
+      }
+
+      const orderId = Number(queryParam);
+      const isValidId = Number.isInteger(orderId) && orderId > 0 && orderId <= 2147483647;
+      let whereClause;
+      if (isValidId && queryParam.length < 10) {
+          // If it's a short number, assume it's an Order ID precisely
+          whereClause = { id: orderId };
+      } else {
+          // If it's a long string/number, assume it's a phone number
+          whereClause = { phone: { contains: queryParam } };
+      }
+
+      const order = await prisma.order.findFirst({
+        where: whereClause,
+        include: { items: true }
+      });
+
+      if (!order) {
+        return res.status(404).json({ error: "No order found with that ID or Phone Number." });
+      }
+
+      return res.status(200).json({
+        id: order.id,
+        status: order.status,
+        orderStatus: order.orderStatus,
+        courier_name: order.courierName,
+        tracking_number: order.trackingNumber,
+        paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus,
+        subtotal: order.subtotal,
+        shippingFee: order.shippingFee || order.deliveryFee || 0,
+        total: order.total,
+        items: order.items || []
+      });
+    } catch (error) {
+      console.error("[GET /api/orders/track]", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+
+// Serve frontend natively
+const frontendDir = path.join(__dirname, "..", "Main");
+app.use(express.static(frontendDir));
 
 const CLOUDINARY_CLOUD_NAME = String(process.env.CLOUDINARY_CLOUD_NAME || "").trim();
 const CLOUDINARY_API_KEY = String(process.env.CLOUDINARY_API_KEY || "").trim();
@@ -351,6 +436,73 @@ function requireAdmin(req, res, next) {
   return next();
 }
 
+// Heavy Parcel Rates (3.01 kg to 10.00 kg) matching J&T Express rate structure
+function getHeavyParcelRate(weight) {
+  const w = Number(weight) || 0;
+  if (w > 3.00 && w <= 4.00) return 200;
+  if (w > 4.00 && w <= 5.00) return 220;
+  if (w > 5.00 && w <= 6.00) return 255;
+  if (w > 6.00 && w <= 7.00) return 295;
+  if (w > 7.00 && w <= 8.00) return 335;
+  if (w > 8.00 && w <= 9.00) return 375;
+  if (w > 9.00 && w <= 10.00) return 415;
+  return null;
+}
+
+// Calculate dynamic shipping breakdown according to J&T Express structure
+function calculateShippingBreakdown({ region, weight = 0, subtotal = 0 }) {
+  const w = Number(weight) || 0;
+  const sub = Number(subtotal) || 0;
+  const r = String(region || '').trim();
+
+  const isOverLimit = w > 10.00;
+
+  let baseShippingFee = 0;
+  if (w > 3.00 && w <= 10.00) {
+    baseShippingFee = getHeavyParcelRate(w) || 0;
+  } else {
+    // Small Parcels (<= 3.00 kg): Regional base rates
+    const rates = {
+      'NCR': 105,
+      'CAR': 105,
+      'Region I': 105,
+      'Region II': 105,
+      'Region III': 105,
+      'Region IV-A': 105,
+      'Region IV-B': 115,
+      'Region V': 105,
+      'Region VI': 105,
+      'Region VII': 105,
+      'Region VIII': 105,
+      'Region IX': 85,
+      'Region X': 85,
+      'Region XI': 85,
+      'Region XII': 85,
+      'Region XIII': 85,
+      'BARMM': 115
+    };
+    baseShippingFee = rates[r] || (r ? 105 : 0);
+  }
+
+  // J&T Assurance / Insurance Fee: ₱5 for every ₱500 worth of declared item subtotal
+  const insuranceFee = sub > 0 ? Math.ceil(sub / 500) * 5 : 0;
+  const totalShippingFee = baseShippingFee + insuranceFee;
+
+  return {
+    totalWeight: Math.round(w * 100) / 100,
+    baseShippingFee,
+    insuranceFee,
+    totalShippingFee,
+    isOverLimit
+  };
+}
+
+// Get shipping rate by region (J&T rates, with optional weight & subtotal support)
+function getShippingRate(region, weight = 0, subtotal = 0) {
+  const breakdown = calculateShippingBreakdown({ region, weight, subtotal });
+  return breakdown.totalShippingFee;
+}
+
 // Admin: update storefront layer only
 app.patch(
   "/api/admin/products/:id/storefront-layer",
@@ -491,7 +643,30 @@ app.get(
         },
       })
     );
-    res.json(products);
+
+    let weightMap = new Map();
+    try {
+      const rawRows = await prisma.$queryRawUnsafe(`SELECT id, weight_kg FROM Product`);
+      if (Array.isArray(rawRows)) {
+        for (const r of rawRows) {
+          const w = Number(r.weight_kg ?? r.weight);
+          weightMap.set(Number(r.id), Number.isFinite(w) && w > 0 ? w : 0.20);
+        }
+      }
+    } catch {
+      // safe fallback if weight_kg is not in schema
+    }
+
+    const enriched = products.map((p) => {
+      const w = weightMap.get(Number(p.id)) ?? 0.20;
+      return {
+        ...p,
+        weight_kg: Number.isFinite(w) && w > 0 ? w : 0.20,
+        weight: Number.isFinite(w) && w > 0 ? w : 0.20,
+      };
+    });
+
+    res.json(enriched);
   })
 );
 
@@ -511,10 +686,19 @@ app.post(
       type,
       includes,
       storefrontLayer,
+      weight_kg,
+      weight,
     } = req.body;
     if (!name || price === undefined) {
       return res.status(400).json({ error: "name and price are required" });
     }
+
+    const rawWeight = weight_kg !== undefined && weight_kg !== null && String(weight_kg).trim() !== ""
+      ? Number(weight_kg)
+      : weight !== undefined && weight !== null && String(weight).trim() !== ""
+        ? Number(weight)
+        : 0.20;
+    const finalWeight = Number.isFinite(rawWeight) && rawWeight > 0 ? rawWeight : 0.20;
 
     const layerParsed = storefrontLayer === undefined || storefrontLayer === null || String(storefrontLayer).trim() === ""
       ? 1
@@ -544,7 +728,23 @@ app.post(
       })
     );
 
-    res.json(product);
+    try {
+      await withDbRetry(() =>
+        prisma.$executeRawUnsafe(
+          `UPDATE Product SET weight_kg = ? WHERE id = ?`,
+          finalWeight,
+          product.id
+        )
+      );
+    } catch (err) {
+      console.warn("[PRODUCT CREATE] Could not update weight_kg via raw SQL:", err?.message);
+    }
+
+    res.json({
+      ...product,
+      weight_kg: finalWeight,
+      weight: finalWeight,
+    });
   })
 );
 
@@ -666,7 +866,19 @@ app.put(
     const id = Number(req.params.id);
     if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid product id" });
 
-    const { name, price, stock, description, usageInstructions, existingImageUrl, type, includes, storefrontLayer } = req.body;
+    const {
+      name,
+      price,
+      stock,
+      description,
+      usageInstructions,
+      existingImageUrl,
+      type,
+      includes,
+      storefrontLayer,
+      weight_kg,
+      weight,
+    } = req.body;
     if (!name || price === undefined) {
       return res.status(400).json({ error: "name and price are required" });
     }
@@ -705,7 +917,27 @@ app.put(
         })
       );
 
-      return res.json(updated);
+      let finalWeight = null;
+      if (weight_kg !== undefined || weight !== undefined) {
+        const rawW = Number(weight_kg !== undefined && weight_kg !== null && String(weight_kg).trim() !== "" ? weight_kg : weight);
+        finalWeight = Number.isFinite(rawW) && rawW > 0 ? rawW : 0.20;
+        try {
+          await withDbRetry(() =>
+            prisma.$executeRawUnsafe(
+              `UPDATE Product SET weight_kg = ? WHERE id = ?`,
+              finalWeight,
+              id
+            )
+          );
+        } catch (err) {
+          console.warn("[PRODUCT UPDATE] Could not update weight_kg via raw SQL:", err?.message);
+        }
+      }
+
+      return res.json({
+        ...updated,
+        ...(finalWeight !== null ? { weight_kg: finalWeight, weight: finalWeight } : {}),
+      });
     } catch (e) {
       if (e?.code === "P2025") {
         return res.status(404).json({ error: "Product not found" });
@@ -729,6 +961,7 @@ app.post(
 
     const {
       userId,
+      customerEmail,
       gcashReference,
       customerReceiptUrl,
       name,
@@ -742,6 +975,8 @@ app.post(
       shipping_fee,
       total,
       total_amount,
+      islandGroup,
+      province,
     } = req.body;
 
     const userIdParsed = Number.isFinite(parseInt(userId, 10)) ? parseInt(userId, 10) : null;
@@ -819,6 +1054,20 @@ app.post(
       return res.status(400).json({ message: "Valid shipping fee is required." });
     }
 
+    // Validate shipping fee against expected rate for region
+    const customerRegion = String(islandGroup || province || '').trim();
+    if (customerRegion) {
+      const expectedRate = getShippingRate(customerRegion);
+      if (expectedRate > 0 && Number(finalShippingFee) !== expectedRate) {
+        console.warn('[order] Shipping fee mismatch:', {
+          region: customerRegion,
+          expected: expectedRate,
+          received: finalShippingFee
+        });
+        // Log warning but don't reject - client-side change could be in transit
+      }
+    }
+
     const computedTotal = finalSubtotal + finalShippingFee;
     const finalTotal = Number.isFinite(incomingTotalCandidate) ? incomingTotalCandidate : computedTotal;
     if (!Number.isFinite(finalTotal) || finalTotal <= 0) {
@@ -884,6 +1133,42 @@ app.post(
             throw err;
           }
 
+          // Fetch weights directly from database with safe fallback
+          let productWeights = new Map();
+          try {
+            const rawRows = await tx.$queryRawUnsafe(`SELECT id, weight_kg FROM Product WHERE id IN (${productIds.join(",")})`);
+            if (Array.isArray(rawRows)) {
+              for (const r of rawRows) {
+                const w = Number(r.weight_kg ?? r.weight);
+                productWeights.set(Number(r.id), Number.isFinite(w) && w > 0 ? w : 0.20);
+              }
+            }
+          } catch {
+            // safe fallback if weight_kg column does not exist
+          }
+
+          // Dynamic aggregate parcel weight calculation
+          let totalParcelWeight = 0;
+          let verifiedSubtotal = 0;
+          for (const it of normalizedItems) {
+            const p = byId.get(Number(it.productId));
+            const qty = Number(it.quantity) || 1;
+            const price = Number(p?.price) || 0;
+            verifiedSubtotal += price * qty;
+
+            const rawW = productWeights.get(Number(it.productId)) ?? Number(p?.weight_kg ?? p?.weight);
+            const unitW = Number.isFinite(rawW) && rawW > 0 ? rawW : 0.20;
+            totalParcelWeight += unitW * qty;
+          }
+          totalParcelWeight = Math.round(totalParcelWeight * 100) / 100;
+
+          // Over-Limit Handling (> 10.00 kg)
+          if (totalParcelWeight > 10.00) {
+            const err = new Error("Package exceeds maximum parcel weight of 10.00 kg. Please split items into two separate orders.");
+            err.statusCode = 400;
+            throw err;
+          }
+
           for (const it of normalizedItems) {
             const p = byId.get(Number(it.productId));
             if (!p) continue;
@@ -911,16 +1196,40 @@ app.post(
             throw err;
           }
 
+          // Server-side final rate calculation matching J&T Express rate structure
+          const orderRegion = String(islandGroup || province || req.body?.region || "").trim();
+          const shippingBreakdown = calculateShippingBreakdown({
+            region: orderRegion,
+            weight: totalParcelWeight,
+            subtotal: finalSubtotal || verifiedSubtotal
+          });
+
+          const serverShippingFee = shippingBreakdown.totalShippingFee;
+          const orderSubtotal = finalSubtotal || verifiedSubtotal;
+          const serverTotal = orderSubtotal + serverShippingFee;
+
+          // If table currently has 0 orders, guarantee AUTO_INCREMENT starts at 1
+          try {
+            const currentCount = await tx.order.count();
+            if (currentCount === 0) {
+              await tx.$executeRawUnsafe('ALTER TABLE `order` AUTO_INCREMENT = 1;');
+              await tx.$executeRawUnsafe('ALTER TABLE `orderitem` AUTO_INCREMENT = 1;');
+            }
+          } catch (autoIncErr) {
+            console.warn('[order] failed to check or reset AUTO_INCREMENT on empty table:', autoIncErr?.message || autoIncErr);
+          }
+
           const created = await tx.order.create({
             data: {
               status: "Pending",
               userId: Number.isFinite(finalUserId) ? parseInt(finalUserId, 10) : null,
               customerName: orderCustomerName,
+              customerEmail: String(customerEmail || "").trim() || null,
               phone: orderPhone,
               address: orderAddress,
-              subtotal: finalSubtotal,
-              shippingFee: finalShippingFee,
-              total: finalTotal,
+              subtotal: orderSubtotal,
+              shippingFee: serverShippingFee,
+              total: serverTotal,
               paymentMethod: cleanPaymentMethod,
               receiptRef: null,
               customerReceiptUrl: finalCustomerReceiptUrl || null,
@@ -964,6 +1273,13 @@ app.post(
         }
       }
 
+      if (e?.statusCode && e.statusCode < 500) {
+        return res.status(e.statusCode).json({
+          success: false,
+          message: e.message,
+        });
+      }
+
       if (e?.code === "P2022") {
         console.error("[ORDER CREATE SCHEMA ERROR]", {
           code: e?.code,
@@ -1004,9 +1320,16 @@ app.post(
       itemsCount: Array.isArray(order?.items) ? order.items.length : 0,
       hasReceipt: Boolean(order?.customerReceiptUrl),
     });
+    
+    // Dispatch automated dual email notifications
+    if (order && order.id) {
+        dispatchOrderEmails(order, String(customerEmail || "").trim() || null);
+    }
+
     return res.status(201).json(order);
   })
 );
+
 
 // Public: list orders (grouped with items[]) - intended for dashboards/frontends
 app.get(
@@ -1099,10 +1422,17 @@ app.post(
   requireAuth,
   requireAdmin,
   asyncHandler(async (req, res) => {
-    const { name, price, stock = 0, imageUrl, description, usageInstructions, type, includes } = req.body;
+    const { name, price, stock = 0, imageUrl, description, usageInstructions, type, includes, weight_kg, weight } = req.body;
     if (!name || price === undefined) {
       return res.status(400).json({ error: "name and price are required" });
     }
+
+    const rawWeight = weight_kg !== undefined && weight_kg !== null && String(weight_kg).trim() !== ""
+      ? Number(weight_kg)
+      : weight !== undefined && weight !== null && String(weight).trim() !== ""
+        ? Number(weight)
+        : 0.20;
+    const finalWeight = Number.isFinite(rawWeight) && rawWeight > 0 ? rawWeight : 0.20;
 
     const normalizedType = type === "BUNDLE" ? "BUNDLE" : type === "PACKAGE" ? "PACKAGE" : "SINGLE";
     const normalizedIncludes = includes !== undefined && includes !== null ? String(includes).trim() : "";
@@ -1122,7 +1452,23 @@ app.post(
       })
     );
 
-    res.json(product);
+    try {
+      await withDbRetry(() =>
+        prisma.$executeRawUnsafe(
+          `UPDATE Product SET weight_kg = ? WHERE id = ?`,
+          finalWeight,
+          product.id
+        )
+      );
+    } catch (err) {
+      console.warn("[ADMIN PRODUCT CREATE] Could not update weight_kg via raw SQL:", err?.message);
+    }
+
+    res.json({
+      ...product,
+      weight_kg: finalWeight,
+      weight: finalWeight,
+    });
   })
 );
 
@@ -1417,6 +1763,67 @@ app.patch(
   })
 );
 
+// Admin: renumber orders sequentially starting from #1
+app.post(
+  "/api/admin/orders/renumber",
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    try {
+      const orders = await withDbRetry(() =>
+        prisma.order.findMany({
+          orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+          select: { id: true, receiptRef: true },
+        })
+      );
+
+      await withDbRetry(() => prisma.$executeRawUnsafe("SET FOREIGN_KEY_CHECKS = 0;"));
+      try {
+        if (orders.length === 0) {
+          await withDbRetry(() => prisma.$executeRawUnsafe("ALTER TABLE `order` AUTO_INCREMENT = 1;"));
+          await withDbRetry(() => prisma.$executeRawUnsafe("ALTER TABLE `orderitem` AUTO_INCREMENT = 1;"));
+        } else {
+          await withDbRetry(() => prisma.$executeRawUnsafe("UPDATE `orderitem` SET order_id = order_id + 1000000;"));
+          await withDbRetry(() => prisma.$executeRawUnsafe("UPDATE `order` SET id = id + 1000000;"));
+
+          for (let i = 0; i < orders.length; i++) {
+            const oldId = orders[i].id;
+            const newId = i + 1;
+            const tempId = oldId + 1000000;
+
+            await withDbRetry(() =>
+              prisma.$executeRawUnsafe(`UPDATE \`orderitem\` SET order_id = ${newId} WHERE order_id = ${tempId};`)
+            );
+            await withDbRetry(() =>
+              prisma.$executeRawUnsafe(`UPDATE \`order\` SET id = ${newId} WHERE id = ${tempId};`)
+            );
+
+            const oldRef = orders[i].receiptRef;
+            if (oldRef && oldRef.startsWith("ADM-")) {
+              const parts = oldRef.split("-");
+              const timestamp = parts.slice(2).join("-");
+              const newRef = `ADM-${newId}-${timestamp || Date.now()}`;
+              await withDbRetry(() =>
+                prisma.$executeRawUnsafe(`UPDATE \`order\` SET receipt_ref = '${newRef}' WHERE id = ${newId};`)
+              );
+            }
+          }
+
+          const nextId = orders.length + 1;
+          await withDbRetry(() => prisma.$executeRawUnsafe(`ALTER TABLE \`order\` AUTO_INCREMENT = ${nextId};`));
+        }
+      } finally {
+        await withDbRetry(() => prisma.$executeRawUnsafe("SET FOREIGN_KEY_CHECKS = 1;"));
+      }
+
+      res.json({ success: true, count: orders.length, nextId: orders.length + 1 });
+    } catch (err) {
+      console.error("[admin] renumber orders failed:", err);
+      res.status(500).json({ success: false, error: "Failed to renumber orders." });
+    }
+  })
+);
+
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
 
@@ -1450,6 +1857,8 @@ app.use((err, req, res, next) => {
 app.get("/", (req, res) => {
   res.send("Backend API is running!");
 });
+
+// Initialization removed as it was causing a Prisma error with non-nullable type
 
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);

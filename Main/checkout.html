@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="checkout.css" />
+    <link rel="stylesheet" href="style.css?v=20261008_3" />
+    <link rel="stylesheet" href="checkout.css?v=20261008_3" />
 </head>
 
 <body>
@@ -33,6 +33,18 @@
 
     <main class="checkout" aria-label="Checkout">
         <div class="container checkout__inner">
+            <!-- Mobile-Only Order Summary Accordion Bar -->
+            <div class="mobileSummaryBar" id="mobileSummaryToggle" role="button" tabindex="0" aria-expanded="true" aria-label="Toggle order summary">
+                <div class="mobileSummaryBar__left">
+                    <span class="mobileSummaryBar__icon">🛍️</span>
+                    <span class="mobileSummaryBar__text" id="mobile-summary-count-text">Order Summary</span>
+                    <span class="mobileSummaryBar__arrow">▲</span>
+                </div>
+                <div class="mobileSummaryBar__right">
+                    <span class="mobileSummaryBar__total" id="mobile-summary-total-preview">₱ 0.00</span>
+                </div>
+            </div>
+
             <section class="checkout__left" aria-label="Checkout form">
                 <header class="checkout__head">
                     <h1 class="checkout__title">Checkout</h1>
@@ -41,8 +53,24 @@
 
                 <form id="checkout-form" class="checkoutForm" novalidate>
                     <section id="step-shipping" class="checkout-step active" aria-label="Step 1: Shipping">
+                        <!-- Card 1: Contact Information -->
                         <div class="checkoutCard">
-                            <h2 class="checkoutCard__title">Contact</h2>
+                            <div class="checkoutCard__header">
+                                <div class="checkoutCard__icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                </div>
+                                <div class="checkoutCard__headerText">
+                                    <div class="checkoutCard__titleRow">
+                                        <h2 class="checkoutCard__title">Contact Information</h2>
+                                        <span class="checkoutStepPill">Step 1 of 2</span>
+                                    </div>
+                                    <span class="checkoutCard__subtitle">Where should we send your order confirmation and tracking updates?</span>
+                                </div>
+                            </div>
+
                             <div class="formGrid formGrid--2">
                                 <label class="field">
                                     <span class="field__label">First name</span>
@@ -56,18 +84,39 @@
                                 </label>
                             </div>
 
-                            <div class="formGrid">
+                            <div class="formGrid formGrid--2">
                                 <label class="field">
                                     <span class="field__label">Mobile number (PH)</span>
                                     <input class="field__input" type="tel" id="phone" inputmode="numeric" placeholder="09XXXXXXXXX" required />
                                     <span class="field__hint">We only accept valid 11-digit Philippine mobile numbers.</span>
                                     <span class="field__error" data-error-for="phone"></span>
                                 </label>
+                                <label class="field">
+                                    <span class="field__label">Email address</span>
+                                    <input class="field__input" type="email" id="email" placeholder="example@email.com" required />
+                                    <span class="field__hint">Required to receive your order confirmation and tracking updates.</span>
+                                    <span class="field__error" data-error-for="email"></span>
+                                </label>
                             </div>
                         </div>
 
+                        <!-- Card 2: Shipping Address -->
                         <div class="checkoutCard">
-                            <h2 class="checkoutCard__title">Shipping</h2>
+                            <div class="checkoutCard__header">
+                                <div class="checkoutCard__icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                                        <circle cx="12" cy="10" r="3"/>
+                                    </svg>
+                                </div>
+                                <div class="checkoutCard__headerText">
+                                    <div class="checkoutCard__titleRow">
+                                        <h2 class="checkoutCard__title">Shipping Address</h2>
+                                        <span class="checkoutCardBadge">🇵🇭 PH Delivery Only</span>
+                                    </div>
+                                    <span class="checkoutCard__subtitle">Please confirm your complete street and barangay delivery details</span>
+                                </div>
+                            </div>
 
                             <div class="formGrid">
                                 <label class="field">
@@ -132,7 +181,10 @@
                             </div>
 
                             <div class="checkoutStepActions">
-                                <button class="checkoutProceedBtn" type="button" id="proceed-to-payment">PROCEED TO PAYMENT</button>
+                                <button class="checkoutProceedBtn" type="button" id="proceed-to-payment">
+                                    <span>PROCEED TO PAYMENT</span>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                </button>
                             </div>
                         </div>
                     </section>
@@ -140,8 +192,23 @@
                     <section id="step-payment" class="checkout-step" aria-label="Step 2: Payment">
                         <a href="#" class="checkoutBackLink" id="back-to-shipping">← Return to shipping information</a>
 
+                        <!-- Card 3: Payment Method -->
                         <div class="checkoutCard">
-                            <h2 class="checkoutCard__title">Payment</h2>
+                            <div class="checkoutCard__header">
+                                <div class="checkoutCard__icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect width="20" height="14" x="2" y="5" rx="2"/>
+                                        <line x1="2" x2="22" y1="10" y2="10"/>
+                                    </svg>
+                                </div>
+                                <div class="checkoutCard__headerText">
+                                    <div class="checkoutCard__titleRow">
+                                        <h2 class="checkoutCard__title">Payment Method</h2>
+                                        <span class="checkoutStepPill">Step 2 of 2</span>
+                                    </div>
+                                    <span class="checkoutCard__subtitle">Choose your preferred payment method below</span>
+                                </div>
+                            </div>
 
                             <div class="gatewayList" role="radiogroup" aria-label="Select payment method">
                                 <label class="gatewayOption" data-gateway-option>
@@ -165,9 +232,24 @@
                                         </span>
                                     </span>
                                 </label>
+
+                                <label class="gatewayOption" data-gateway-option>
+                                    <input type="radio" name="payment" value="cod" />
+                                    <span class="gatewayOption__left">
+                                        <span class="gatewayOption__dot" aria-hidden="true"></span>
+                                        <span>
+                                            <div class="gatewayOption__title">Cash on Delivery</div>
+                                            <div class="gatewayOption__sub">Pay when you receive the item</div>
+                                        </span>
+                                    </span>
+                                </label>
                             </div>
 
                             <div class="payment-dynamic-panel" style="margin-top: 14px;">
+                                <div id="panel-cod" class="payment-panel-content" aria-live="polite">
+                                    <div class="payment-panel-title">Cash on Delivery</div>
+                                    <div class="payment-panel-copy" style="margin-bottom:0;">Please prepare the exact amount upon delivery. A rider will contact you when your order is on the way.</div>
+                                </div>
                                 <div id="panel-gcash" class="payment-panel-content active" aria-live="polite">
                                     <div class="payment-panel-title" id="ewallet-payment-heading">Pay with GCash</div>
                                     <div class="payment-panel-copy">Scan the QR code using your e-wallet app. After payment, upload your screenshot receipt.</div>
@@ -192,31 +274,56 @@
 
                         <div class="checkoutActions">
                             <button class="checkoutPlaceOrder" type="submit" id="pay-now">PAY NOW</button>
+                            <button class="checkoutCancelOrder" type="button" id="cancel-order" onclick="window.location.href='index.html'; localStorage.removeItem('cart');">CANCEL ORDER</button>
                         </div>
                     </section>
                 </form>
             </section>
 
-            <aside class="checkout__right" aria-label="Order summary">
+            <!-- Card 4: Order Summary Aside -->
+            <aside class="checkout__right is-visible" aria-label="Order summary">
                 <div class="summaryCard">
                     <div class="summaryCard__head">
-                        <h2 class="summaryCard__title">Order Summary</h2>
-                        <a class="summaryCard__edit" href="index.html#shop">Edit cart</a>
+                        <div class="summaryCard__headLeft">
+                            <div class="summaryCard__icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                                    <path d="M3 6h18"/>
+                                    <path d="M16 10a4 4 0 0 1-8 0"/>
+                                </svg>
+                            </div>
+                            <h2 class="summaryCard__title">Order Summary</h2>
+                        </div>
+                        <span class="summaryCard__badge" id="summary-items-count-badge">Items</span>
                     </div>
 
                     <div id="summary-items" class="summaryItems"></div>
 
                     <div class="summaryTotals">
                         <div class="summaryRow">
-                            <span>Subtotal</span>
+                            <span>Items Subtotal</span>
                             <span id="summary-subtotal">₱ 0.00</span>
                         </div>
                         <div class="summaryRow">
-                            <span>Shipping</span>
+                            <span>Total Parcel Weight</span>
+                            <span id="summary-weight">—</span>
+                        </div>
+                        <div class="summaryRow">
+                            <span>Shipping Fee (Base Rate)</span>
                             <span id="summary-shipping">₱ 0.00</span>
                         </div>
+                        <div class="summaryRow">
+                            <span>J&T Insurance Fee</span>
+                            <span id="summary-insurance">₱ 0.00</span>
+                        </div>
+                        <div id="summary-weight-warning" class="summaryWeightWarning" style="display: none;">
+                            ⚠️ Package exceeds maximum parcel weight of 10.00 kg. Please split items into two separate orders.
+                        </div>
                         <div class="summaryRow summaryRow--total">
-                            <span>Total</span>
+                            <div class="summaryTotalLabelWrap">
+                                <span>Grand Total</span>
+                                <span class="summaryTotalSub">Includes shipping & insurance</span>
+                            </div>
                             <span id="summary-total">₱ 0.00</span>
                         </div>
                     </div>
@@ -248,12 +355,20 @@
                 </div>
                 <div id="receipt-items" style="padding: 8px 0;"></div>
                 <div class="orderReceipt__row">
-                    <span>Subtotal</span>
+                    <span>Items Subtotal</span>
                     <strong id="receipt-subtotal">₱ 0.00</strong>
                 </div>
                 <div class="orderReceipt__row">
-                    <span>Shipping Fee</span>
+                    <span>Total Parcel Weight</span>
+                    <strong id="receipt-weight">0.00 kg</strong>
+                </div>
+                <div class="orderReceipt__row">
+                    <span>Shipping Fee (Base Rate)</span>
                     <strong id="receipt-shipping">₱ 0.00</strong>
+                </div>
+                <div class="orderReceipt__row">
+                    <span>J&T Insurance Fee</span>
+                    <strong id="receipt-insurance">₱ 0.00</strong>
                 </div>
                 <div class="orderReceipt__row orderReceipt__row--total">
                     <span>Grand Total</span>
@@ -266,8 +381,64 @@
     </div>
 
     <script>console.log('[checkout] checkout.html loaded');</script>
-    <script src="config.js?v=2"></script>
-    <script src="checkout.js" defer></script>
+    <script src="config.js?v=20261008_3"></script>
+    <script src="checkout.js?v=20261008_3"></script>
+    <script>
+        // Interactive Mobile Order Summary Accordion Controller
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('mobileSummaryToggle');
+            const summaryAside = document.querySelector('.checkout__right');
+            const previewEl = document.getElementById('mobile-summary-total-preview');
+            const totalEl = document.getElementById('summary-total');
+            const countTextEl = document.getElementById('mobile-summary-count-text');
+            const badgeEl = document.getElementById('summary-items-count-badge');
+
+            if (toggle && summaryAside) {
+                // Initialize as open on mobile so customer immediately sees their summary
+                summaryAside.classList.add('is-visible');
+                toggle.classList.add('is-open');
+
+                toggle.addEventListener('click', () => {
+                    const isVisible = summaryAside.classList.toggle('is-visible');
+                    toggle.classList.toggle('is-open', isVisible);
+                    toggle.setAttribute('aria-expanded', String(isVisible));
+                    const arrow = toggle.querySelector('.mobileSummaryBar__arrow');
+                    if (arrow) arrow.textContent = isVisible ? '▲' : '▼';
+                });
+
+                toggle.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggle.click();
+                    }
+                });
+            }
+
+            // Sync total and item count to mobile summary bar
+            const syncSummaryBar = () => {
+                if (totalEl && previewEl) {
+                    previewEl.textContent = totalEl.textContent;
+                }
+                const items = document.querySelectorAll('#summary-items .summaryItem');
+                const count = items.length;
+                const txt = `${count} ${count === 1 ? 'item' : 'items'}`;
+                if (countTextEl) countTextEl.textContent = `Order Summary (${txt})`;
+                if (badgeEl) badgeEl.textContent = txt;
+            };
+
+            if (totalEl) {
+                const observer = new MutationObserver(syncSummaryBar);
+                observer.observe(totalEl, { childList: true, characterData: true, subtree: true });
+                const itemsWrap = document.getElementById('summary-items');
+                if (itemsWrap) {
+                    observer.observe(itemsWrap, { childList: true, subtree: true });
+                }
+            }
+
+            setTimeout(syncSummaryBar, 200);
+            setTimeout(syncSummaryBar, 800);
+        });
+    </script>
 </body>
 
 </html>

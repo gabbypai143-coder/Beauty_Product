@@ -8,7 +8,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -58,8 +58,9 @@ model Order {
   status    OrderStatus @default(Pending)
   createdAt DateTime    @default(now())
 
-  customerName String?
-  phone        String?
+  customerName  String?
+  customerEmail String?
+  phone         String?
   address      String?
 
   subtotal    Decimal? @db.Decimal(10, 2)

@@ -6,10 +6,15 @@
     <title>JammailaV-skin Admin | Login</title>
     <link rel="icon" href="data:,">
     <style>
-        .login-box { width: 90%; max-width: 400px; margin: 100px auto; padding: 2rem; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
-        .login-btn { background: #d4a373; color: white; border: none; padding: 12px 30px; border-radius: 50px; cursor: pointer; width: 100%; min-height: 44px; }
-        body { font-family: sans-serif; background: #fdf8f5; padding: 2rem; color: #4a4a4a; }
+        body { font-family: sans-serif; background: #fdf8f5; color: #4a4a4a; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; box-sizing: border-box; }
+        .login-box { width: 100%; max-width: 380px; margin: 0 auto; padding: 2rem; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; box-sizing: border-box; }
+        h2 { text-align: center; margin-top: 0; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .password-field { position: relative; width: 100%; box-sizing: border-box; }
+        .password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 8px; color: #666; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; }
+        .password-toggle:hover { color: #333; }
+        .password-toggle svg { width: 20px; height: 20px; }
+        .login-btn { background: #d4a373; color: white; border: none; padding: 12px 30px; border-radius: 50px; cursor: pointer; width: 100%; min-height: 44px; box-sizing: border-box; font-size: 16px; font-weight: 600; margin-top: 8px; }
         .toastHost { position: fixed; top: 18px; right: 18px; z-index: 9999; display: grid; gap: 10px; pointer-events: none; }
         .toast {
             pointer-events: auto;
@@ -36,20 +41,46 @@
         .toast--success .toast__icon { color: #1f9d68; }
         .toast--error { background: rgba(255, 91, 123, 0.14); border-color: rgba(255, 91, 123, 0.22); }
         .toast--error .toast__icon { color: #ff5b7b; }
+        .back-link { position: absolute; top: 20px; left: 20px; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: #fdf8f5; border-radius: 50%; color: #d4a373; text-decoration: none; transition: background 0.2s, color 0.2s; }
+        .back-link:hover { background: #d4a373; color: white; }
+        .back-link svg { width: 20px; height: 20px; }
+        .remember-me { display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin: 10px 0 16px; font-size: 14px; color: #555; }
+        .remember-me input[type="checkbox"] { width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: #d4a373; }
+        .remember-me label { cursor: pointer; user-select: none; }
+        .login-box { position: relative; width: 100%; max-width: 380px; margin: 0 auto; padding: 2rem; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; box-sizing: border-box; }
     </style>
 </head>
 <body>
     <div class="login-box">
+        <a href="index.html" class="back-link" aria-label="Back to Storefront" title="Back to Storefront">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </a>
         <h2 style="color: #d4a373;">JammailaV-skin Admin Login</h2>
         <form id="adminLoginForm" action="javascript:void(0)" autocomplete="off">
             <input type="email" id="email" placeholder="Email Address" required>
-            <input type="password" id="pass" placeholder="Password" required>
+            <div class="password-field">
+                <input type="password" id="pass" placeholder="Password" required>
+                <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show/hide password" title="Show/hide password">
+                    <svg class="eye-open" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block;">
+                        <path d="M12 5C7 5 2.73 8.11 1 12.46c1.73 4.35 6 7.54 11 7.54s9.27-3.19 11-7.54C21.27 8.11 17 5 12 5zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/>
+                    </svg>
+                    <svg class="eye-closed" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: none;">
+                        <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.81-2.94 3.69-4.95-2.34-4.56-7.15-7.63-12.25-7.63-1.59 0-3.12.3-4.53.84l2.93 2.93c.57-.23 1.18-.36 1.83-.36zm-9.58 5.02C2.18 7.84 3.99 5.9 6.03 4.3l-1.42-1.42A11.91 11.91 0 0 0 1 12c1.73 4.35 6 7.54 11 7.54 2.05 0 4.01-.4 5.8-1.08l-1.48-1.46c-.61.17-1.25.26-1.92.26-2.76 0-5-2.24-5-5 0-.67.09-1.31.26-1.92l-2.49-2.52c-.39.41-.77.89-1.11 1.4zm6.58-3.52c.17.56.27 1.15.27 1.76 0 1.66-1.34 3-3 3-.62 0-1.2-.1-1.76-.27l.76-.76c.11.01.22.03.33.03.83 0 1.5-.67 1.5-1.5 0-.11-.02-.22-.03-.33l.93-.93zM20.9 4.9l-1.42-1.42C18.09 2.37 15.16 1 12 1c-5.1 0-9.91 3.07-12.25 7.63.75 1.47 1.81 2.77 3.08 3.81l-1.42 1.42c-.21-.23-.41-.47-.6-.71.23.44.47.89.71 1.32l1.42-1.42c.54.45 1.15.85 1.82 1.18l-1.42 1.42c.68.52 1.43.99 2.23 1.38l1.42-1.42c.77.26 1.6.42 2.47.42 2.76 0 5-2.24 5-5 0-.63-.12-1.23-.35-1.8l.93-.93c.76 1.07 1.35 2.33 1.7 3.68l1.42-1.42c.24-.31.46-.62.67-.94l1.42 1.42c.37-.59.68-1.23.93-1.9l-1.42-1.42z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="remember-me">
+                <input type="checkbox" id="rememberMe">
+                <label for="rememberMe">Remember Me</label>
+            </div>
             <button class="login-btn" type="submit">Sign In</button>
         </form>
     </div>
 
     <div class="toastHost" aria-live="polite" aria-atomic="true" id="toastHost"></div>
-<script src="config.js"></script>
+<script src="config.js?v=3"></script>
     <script>
         (function () {
             const DASHBOARD_URL = 'admin.html';
@@ -61,7 +92,23 @@ if (!API_BASE_URL) {
             const emailInput = document.getElementById('email');
             const passwordInput = document.getElementById('pass');
             const host = document.getElementById('toastHost');
+            const passwordToggle = document.getElementById('passwordToggle');
             if (!form || !emailInput || !passwordInput || !host) return;
+
+            // Password visibility toggle
+            if (passwordToggle) {
+                passwordToggle.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const isPassword = passwordInput.type === 'password';
+                    passwordInput.type = isPassword ? 'text' : 'password';
+                    const eyeOpen = passwordToggle.querySelector('.eye-open');
+                    const eyeClosed = passwordToggle.querySelector('.eye-closed');
+                    if (eyeOpen && eyeClosed) {
+                        eyeOpen.style.display = isPassword ? 'none' : 'block';
+                        eyeClosed.style.display = isPassword ? 'block' : 'none';
+                    }
+                });
+            }
 
             const iconCheck = `
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -99,6 +146,16 @@ if (!API_BASE_URL) {
             function normalize(v) {
                 return String(v || '').trim();
             }
+            
+            const rememberMeCheckbox = document.getElementById('rememberMe');
+            const rememberedEmail = localStorage.getItem('jammaila_remembered_email');
+            const rememberedPass = localStorage.getItem('jammaila_remembered_pass');
+            if (rememberedEmail && rememberedPass) {
+                emailInput.value = rememberedEmail;
+                passwordInput.value = rememberedPass;
+                if (rememberMeCheckbox) rememberMeCheckbox.checked = true;
+            }
+
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
@@ -108,7 +165,7 @@ if (!API_BASE_URL) {
 
 
                 try {
-                    const res = await fetch(`${API_BASE_URL}/api/login`, {
+                    const res = await fetch(`/api/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email: sanitizedEmail, password: sanitizedPassword })
@@ -135,6 +192,14 @@ if (!API_BASE_URL) {
                     localStorage.setItem('jammailavskin_token', token);
                     localStorage.setItem('isAdminLoggedIn', 'true');
                     window.name = `jammailavskin_basic:${token}`;
+
+                    if (rememberMeCheckbox && rememberMeCheckbox.checked) {
+                        localStorage.setItem('jammaila_remembered_email', sanitizedEmail);
+                        localStorage.setItem('jammaila_remembered_pass', sanitizedPassword);
+                    } else {
+                        localStorage.removeItem('jammaila_remembered_email');
+                        localStorage.removeItem('jammaila_remembered_pass');
+                    }
 
                     showToast('success', 'Login successful! Redirecting...', 1200);
                     window.setTimeout(() => {

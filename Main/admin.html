@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JammailaV-skin Admin | Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jammaila-skin Admin | Dashboard</title>
     <link rel="icon" href="data:,">
     <style>
         :root {
@@ -13,6 +13,7 @@
             --text: #2b2b2b;
             --muted: #6b6b6b;
             --primary: #2f7f6b;
+
             --primaryDeep: #256a59;
             --accent: #c6a15b;
             --border: rgba(0,0,0,0.08);
@@ -202,6 +203,17 @@
             overflow: visible;
         }
 
+        #outOfStockCard {
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        #outOfStockCard:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.12);
+            border-color: rgba(220, 38, 38, 0.35);
+        }
+
         .form {
             display: grid;
             grid-template-columns: 1fr 0.85fr 0.85fr;
@@ -216,8 +228,15 @@
             align-items: end;
         }
 
+        .form--3col {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.75rem;
+            align-items: end;
+        }
+
         @media (max-width: 768px) {
-            .form--2col { grid-template-columns: 1fr; }
+            .form--2col, .form--3col { grid-template-columns: 1fr; }
         }
 
         label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; }
@@ -976,129 +995,1435 @@
             background: transparent;
         }
 
+        /* Orders Header Actions & View Toggle */
+        .orders-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .orders-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .orders-view-toggle {
+            display: inline-flex;
+            align-items: center;
+            background: #edece8;
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 9px;
+            padding: 3px;
+            gap: 3px;
+        }
+
+        .orders-view-toggle .view-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 7px;
+            background: transparent;
+            color: #666;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .orders-view-toggle .view-toggle-btn.active {
+            background: #ffffff;
+            color: #111;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        .orders-view-toggle .view-toggle-btn:hover:not(.active) {
+            color: #222;
+        }
+
+        /* Order Cards Layout */
+        .orders-cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .orders-empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem 1.5rem;
+            background: #fafaf8;
+            border: 1px dashed rgba(0,0,0,0.12);
+            border-radius: 14px;
+            color: #888;
+        }
+
+        .order-card {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .order-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+            border-color: rgba(47, 127, 107, 0.25);
+        }
+
+        .order-card-new {
+            animation: newOrderCardHighlight 4s ease-out;
+            border-color: rgba(47, 127, 107, 0.5) !important;
+        }
+
+        @keyframes newOrderCardHighlight {
+            0% {
+                box-shadow: 0 0 0 3px rgba(47, 127, 107, 0.35), 0 8px 24px rgba(47, 127, 107, 0.12);
+                background-color: rgba(47, 127, 107, 0.06);
+            }
+            50% {
+                box-shadow: 0 0 0 2px rgba(47, 127, 107, 0.2), 0 6px 18px rgba(47, 127, 107, 0.08);
+                background-color: rgba(47, 127, 107, 0.03);
+            }
+            100% {
+                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+                background-color: #ffffff;
+            }
+        }
+
+        /* Order Card Top Bar */
+        .order-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+
+        .order-card-badge-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .order-card-id {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(47, 127, 107, 0.1);
+            color: #256a59;
+            font-size: 0.95rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 8px;
+            letter-spacing: -0.2px;
+        }
+
+        .order-card-time {
+            font-size: 0.78rem;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .order-card-status-wrap {
+            flex-shrink: 0;
+        }
+
+        .order-card-status-wrap .orderStatusSelect {
+            width: auto;
+            min-width: 110px;
+            padding: 5px 12px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        /* Order Card Customer */
+        .order-card-customer {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .order-customer-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #eee8dc 0%, #e2d7c0 100%);
+            color: #634d25;
+            font-weight: 800;
+            font-size: 0.82rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid rgba(198,161,91,0.25);
+        }
+
+        .order-customer-details {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .order-customer-name {
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1.25;
+            word-break: break-word;
+        }
+
+        .order-customer-contact {
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .order-phone-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #2f7f6b;
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 600;
+            background: rgba(47, 127, 107, 0.08);
+            padding: 2px 7px;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+
+        .order-phone-link:hover {
+            background: rgba(47, 127, 107, 0.16);
+            color: #1f6252;
+        }
+
+        .order-address-preview {
+            margin-top: 5px;
+            font-size: 0.78rem;
+            color: #718096;
+            line-height: 1.35;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Order Products */
+        .order-card-products {
+            background: #fafaf7;
+            border: 1px solid rgba(0,0,0,0.04);
+            border-radius: 10px;
+            padding: 9px 12px;
+        }
+
+        .order-products-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+        }
+
+        .order-items-badge {
+            background: #eee;
+            color: #555;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        .order-products-chips {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .order-product-chip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.84rem;
+            color: #333;
+            padding: 2px 0;
+        }
+
+        .order-chip-name {
+            font-weight: 500;
+            word-break: break-word;
+            flex: 1;
+        }
+
+        .order-chip-qty {
+            font-weight: 700;
+            color: #2f7f6b;
+            background: rgba(47, 127, 107, 0.1);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            flex-shrink: 0;
+        }
+
+        /* Order Summary Box */
+        .order-card-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .order-summary-box {
+            background: #fbfbf9;
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 10px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .order-summary-box .summary-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #999;
+        }
+
+        .order-summary-box .summary-value {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #222;
+            word-break: break-word;
+        }
+
+        .order-summary-box .summary-value.total-highlight {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #2f7f6b;
+        }
+
+        .order-summary-box .summary-sub {
+            font-size: 0.74rem;
+            font-weight: 600;
+            margin-top: 1px;
+        }
+
+        .order-summary-box .summary-sub.pending { color: #d9822b; }
+        .order-summary-box .summary-sub.paid,
+        .order-summary-box .summary-sub.verified { color: #146b3a; }
+
+        /* Order Card Actions */
+        .order-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0,0,0,0.06);
+            margin-top: auto;
+        }
+
+        .order-card-actions .order-card-btn-view {
+            flex: 1;
+            height: 38px;
+            padding: 0 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            background: #2f7f6b;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .order-card-actions .order-card-btn-view:hover {
+            background: #256a59;
+            transform: translateY(-1px);
+        }
+
+        .order-card-actions .order-card-btn-delete {
+            height: 38px;
+            padding: 0 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            background: rgba(239, 68, 68, 0.08);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .order-card-actions .order-card-btn-delete:hover {
+            background: rgba(239, 68, 68, 0.16);
+            border-color: rgba(239, 68, 68, 0.35);
+            transform: translateY(-1px);
+        }
+
+        /* Improved Table View (When toggled on) */
         #section-orders .table-responsive-container {
-            overflow-x: hidden;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 12px;
         }
 
         #section-orders .table-responsive-container table.orders-dashboard-table {
             width: 100%;
-            table-layout: fixed;
+            min-width: 820px;
+            table-layout: auto;
+            border-collapse: collapse;
         }
 
         #section-orders table.orders-dashboard-table th,
         #section-orders table.orders-dashboard-table td {
-            overflow: hidden;
-            text-overflow: ellipsis;
+            padding: 12px 14px;
+            text-align: left;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border);
+            overflow: visible;
+            text-overflow: clip;
+            white-space: normal;
         }
 
         #section-orders table.orders-dashboard-table th.ordersColId,
         #section-orders table.orders-dashboard-table td.ordersColId {
-            width: 70px;
-        }
-
-        #section-orders table.orders-dashboard-table th.ordersColActions,
-        #section-orders table.orders-dashboard-table td.ordersColActions {
-            width: 150px;
+            width: 75px;
+            font-weight: 700;
         }
 
         #section-orders table.orders-dashboard-table th.ordersColCustomer,
         #section-orders table.orders-dashboard-table td.ordersColCustomer {
-            width: auto;
+            min-width: 150px;
         }
 
         #section-orders table.orders-dashboard-table th.ordersColProducts,
         #section-orders table.orders-dashboard-table td.ordersColProducts {
-            width: auto;
-            white-space: nowrap;
+            min-width: 180px;
         }
 
         #section-orders table.orders-dashboard-table th.ordersColQty,
         #section-orders table.orders-dashboard-table td.ordersColQty {
-            width: 50px;
+            width: 60px;
             text-align: center;
         }
 
         #section-orders table.orders-dashboard-table th.ordersColTotal,
         #section-orders table.orders-dashboard-table td.ordersColTotal {
-            width: 100px;
+            min-width: 95px;
+            font-weight: 700;
+            color: #2f7f6b;
         }
 
         #section-orders table.orders-dashboard-table th.ordersColPayment,
         #section-orders table.orders-dashboard-table td.ordersColPayment {
-            width: 110px;
-            white-space: nowrap;
+            min-width: 130px;
         }
 
         #section-orders table.orders-dashboard-table th.ordersColStatus,
         #section-orders table.orders-dashboard-table td.ordersColStatus {
-            width: 150px;
-            overflow: visible;
+            min-width: 130px;
         }
 
+        #section-orders table.orders-dashboard-table th.ordersColActions,
+        #section-orders table.orders-dashboard-table td.ordersColActions {
+            width: 100px;
+        }
+
+        /* ==========================================================================
+           Modern Card-Based Order Details Modal
+           ========================================================================== */
+        #orderDetailsModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            animation: odFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes odFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes odSlideUp {
+            from { opacity: 0; transform: translateY(18px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .od-modal-dialog {
+            width: 100%;
+            max-width: 540px;
+            max-height: 88vh;
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 0 !important;
+            animation: odSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        /* Modal Sticky Header */
         .odModalHeader {
-            display:flex; align-items:center; justify-content:space-between;
-            padding-bottom:0.9rem; margin-bottom:1rem; border-bottom:1px solid var(--border, #eee);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.15rem 1.4rem;
+            background: #ffffff;
+            border-bottom: 1px solid #f1f5f9;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            z-index: 2;
         }
-        .odModalHeader h3 { margin:0; font-size:1.15rem; }
-        .odSection {
-            margin-bottom:1.1rem; padding-bottom:1.1rem; border-bottom:1px solid #f0f0f0;
+
+        .odHeaderLeft {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
-        .odSection:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
-        .odSectionTitle {
-            font-size:0.72rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase;
-            color:#9a9a9a; margin-bottom:0.6rem;
+
+        .odHeaderIcon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            color: #16a34a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(22, 163, 74, 0.12);
         }
-        .odGrid {
-            display:grid; grid-template-columns:1fr 1fr; gap:0.75rem 1rem;
+
+        .odModalHeader h3 {
+            margin: 0;
+            font-size: 1.12rem;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.25;
+            letter-spacing: -0.01em;
         }
-        .odField { min-width:0; }
-        .odLabel { font-size:0.74rem; color:#8a8a8a; margin-bottom:2px; }
-        .odValue { font-size:0.92rem; color:#222; font-weight:600; word-break:break-word; }
-        .odFull { grid-column: 1 / -1; }
-        .odProductsList { display:flex; flex-direction:column; gap:4px; }
-        .odProductRow {
-            display:flex; justify-content:space-between; font-size:0.9rem;
-            padding:6px 10px; background:#faf7f8; border-radius:8px;
+
+        .odHeaderSubtitle {
+            font-size: 0.78rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-top: 1px;
         }
+
+        .odCloseBtn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        .odCloseBtn:hover {
+            background: #f8fafc;
+            color: #0f172a;
+            border-color: #cbd5e1;
+            transform: scale(1.05);
+        }
+
+        /* Modal Scrollable Body */
+        .odModalBody {
+            padding: 1.15rem 1.35rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            background: #f8fafc;
+            flex: 1;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+
+        .odModalBody::-webkit-scrollbar {
+            width: 6px;
+        }
+        .odModalBody::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .odModalBody::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        /* Sub-Cards Base */
+        .odSubCard {
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            padding: 1rem 1.15rem;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .odSubCardHeader {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .odSubCardTitle {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .odSubCardTitle svg {
+            color: #94a3b8;
+        }
+
+        .odCountBadge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: #f1f5f9;
+            color: #475569;
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+        }
+
+        /* 1. Status & Payment Card */
+        .odStatusCard {
+            border-top: 3px solid #2f7f6b;
+        }
+
+        .odCardTop {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .odMetaLeft {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .odOrderNumBadge {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.01em;
+            background: #f1f5f9;
+            padding: 0.2rem 0.6rem;
+            border-radius: 8px;
+        }
+
+        .odDateMeta {
+            font-size: 0.78rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .odMetaRight {
+            display: flex;
+            align-items: center;
+        }
+
+        .odStatusControl {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .odFieldLabel {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: #64748b;
+        }
+
+        .odStatusControl .orderStatusSelect {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.65rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            cursor: pointer;
+        }
+
+        .odCardDivider {
+            height: 1px;
+            background: #f1f5f9;
+            margin: 0.75rem 0;
+        }
+
+        .odPaymentGrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .odPaymentBox {
+            background: #f8fafc;
+            border: 1px solid #edf2f7;
+            border-radius: 10px;
+            padding: 0.65rem 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .odPaymentMethod {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .odPaymentStatusBadge {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.2rem 0.55rem;
+            border-radius: 6px;
+            text-transform: capitalize;
+            width: fit-content;
+        }
+
+        .odPaymentStatusBadge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .odPaymentStatusBadge.paid,
+        .odPaymentStatusBadge.completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .odPaymentStatusBadge.failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* 2. Customer / Buyer Card */
+        .odCustomerRow {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .odCustomerAvatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2);
+        }
+
+        .odCustomerInfo {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .odCustomerName {
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .odCustomerContact {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+        }
+
+        .odPhoneBtn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.82rem;
+            color: #059669;
+            text-decoration: none;
+            font-weight: 600;
+            background: #ecfdf5;
+            padding: 0.2rem 0.55rem;
+            border-radius: 6px;
+            border: 1px solid #d1fae5;
+            transition: all 0.15s ease;
+        }
+
+        .odPhoneBtn:hover {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .odCopyBtn {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #64748b;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 0.2rem 0.45rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .odCopyBtn:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .odCopyBtn.copied {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #86efac;
+        }
+
+        .odAddressBlock {
+            background: #f8fafc;
+            border: 1px solid #edf2f7;
+            border-radius: 10px;
+            padding: 0.65rem 0.8rem;
+        }
+
+        .odAddressHeader {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: #64748b;
+            margin-bottom: 0.35rem;
+        }
+
+        .odAddressHeader svg {
+            color: #e11d48;
+        }
+
+        .odAddressContent {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .odAddressText {
+            font-size: 0.84rem;
+            color: #334155;
+            line-height: 1.45;
+            word-break: break-word;
+            flex: 1;
+        }
+
+        .odCopyAddressBtn {
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* 3. Shipping Card */
+        .odShippingGrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .odShippingBox {
+            background: #f8fafc;
+            border: 1px solid #edf2f7;
+            border-radius: 10px;
+            padding: 0.65rem 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .odCourierBadge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .odTrackingWrap {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 2px;
+            flex-wrap: wrap;
+        }
+
+        .odTrackingCode {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #0f172a;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 0.18rem 0.45rem;
+            border-radius: 6px;
+            letter-spacing: 0.02em;
+        }
+
+        /* 4. Products Card */
+        .odProductsList {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .odProductItem {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 0.8rem;
+            background: #f8fafc;
+            border: 1px solid #edf2f7;
+            border-radius: 10px;
+            gap: 0.65rem;
+        }
+
+        .odProductLeft {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .odProductIcon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #fdf2f8;
+            color: #db2777;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+
+        .odProductDetails {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .odProductName {
+            font-size: 0.86rem;
+            font-weight: 600;
+            color: #1e293b;
+            word-break: break-word;
+            line-height: 1.35;
+        }
+
+        .odProductPrice {
+            font-size: 0.74rem;
+            color: #64748b;
+            margin-top: 1px;
+        }
+
+        .odProductRight {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            flex-shrink: 0;
+        }
+
+        .odQtyBadge {
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: #475569;
+            background: #e2e8f0;
+            padding: 0.2rem 0.5rem;
+            border-radius: 9999px;
+        }
+
+        .odSubtotal {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .odTotalSummaryBox {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px dashed #e2e8f0;
+        }
+
         .odTotalRow {
-            display:flex; justify-content:space-between; align-items:center;
-            padding-top:0.6rem; margin-top:0.3rem; border-top:1px dashed #eadfe2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.2rem 0;
         }
-        .odTotalRow .odLabel { font-size:0.85rem; }
-        .odTotalRow .odValue { font-size:1.05rem; color:#c2185b; }
+
+        .odTotalLabel {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .odTotalHighlight {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #be185d;
+            letter-spacing: -0.01em;
+        }
+
+        /* 5. Receipt Card */
         .odReceiptBox {
-            display:flex; align-items:center; justify-content:center;
-            background:#faf7f8; border:1px dashed #e6dde0; border-radius:12px; padding:1rem; min-height:80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            border: 1.5px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 0.9rem;
+            min-height: 80px;
+            text-align: center;
         }
-        .odReceiptBox img {
-            max-width:100%; max-height:300px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.08);
+
+        .odReceiptImgWrap {
+            max-width: 100%;
+            max-height: 240px;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
         }
+
+        .odReceiptImgWrap img {
+            max-width: 100%;
+            max-height: 240px;
+            object-fit: contain;
+            display: block;
+            background: #ffffff;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .odReceiptImgWrap img:hover {
+            transform: scale(1.02);
+        }
+
+        .odReceiptActions {
+            margin-top: 0.65rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .odReceiptViewBtn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #0284c7;
+            background: #e0f2fe;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background 0.15s ease;
+        }
+
+        .odReceiptViewBtn:hover {
+            background: #bae6fd;
+        }
+
+        .odReceiptEmpty {
+            color: #94a3b8;
+            font-size: 0.82rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.75rem 0;
+        }
+
+        .odHint {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        /* Modal Footer */
+        .odModalFooter {
+            padding: 0.85rem 1.4rem;
+            background: #ffffff;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .odFooterCloseBtn {
+            padding: 0.45rem 1.25rem !important;
+            font-size: 0.88rem !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+        }
+        
+        .mobile-label { display: none; }
 
         @media (max-width: 768px) {
+            /* Prevent iOS Safari Auto-Zoom on form fields */
+            input, select, textarea { font-size: 16px !important; }
+            
             .app { grid-template-columns: 1fr; }
-            .sidebar { position: fixed; inset: 0; height: 100vh; width: 280px; z-index: 999; display: none; }
-            .sidebar.is-open { display: block; }
+            .sidebar { position: fixed; top: 0; left: 0; bottom: 0; height: 100vh; width: 280px; z-index: 1000; transform: translateX(-100%); background: #ffffff; box-shadow: 4px 0 15px rgba(0,0,0,0.1); transition: transform 0.3s ease; display: block; }
+            .sidebar.is-open { transform: translateX(0); }
+            .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 999; display: none; }
+            .sidebar-overlay.is-active { display: block; }
             .menuBtn { display: block; }
             .cards { grid-template-columns: 1fr; }
             .inventoryGrid { grid-template-columns: 1fr; }
             .form { grid-template-columns: 1fr; }
-            .table-responsive-container { overflow-x: auto; }
+            .table-responsive-container { overflow-x: hidden; padding-bottom: 1rem; width: 100%; box-sizing: border-box; }
+            
+            /* Orders Section Mobile Styles */
+            .orders-cards-container {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .order-card {
+                padding: 14px;
+                border-radius: 12px;
+            }
+            .orders-header-actions {
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 4px;
+            }
+            #ordersCardsContainer {
+                display: grid !important;
+            }
+            #ordersTableContainer {
+                display: none !important;
+            }
+            .orders-view-toggle {
+                display: none !important;
+            }
+            
+            /* Modal Mobile Responsiveness */
+            #editProductModal .card { padding: 1rem !important; }
+            #orderDetailsModal {
+                padding: 0.5rem;
+                align-items: flex-end;
+            }
+            .od-modal-dialog {
+                max-height: 92vh;
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+                border-top-left-radius: 20px;
+                border-top-right-radius: 20px;
+            }
+            .odModalHeader {
+                padding: 1rem 1.15rem;
+            }
+            .odModalBody {
+                padding: 0.9rem;
+                gap: 0.75rem;
+            }
+            .odSubCard {
+                padding: 0.85rem 0.95rem;
+            }
+            .odPaymentGrid,
+            .odShippingGrid {
+                grid-template-columns: 1fr;
+                gap: 0.55rem;
+            }
+            .odModalFooter {
+                padding: 0.75rem 1rem;
+            }
+        }
+
+        /* Live Order Notification Pop-up Styles */
+        #liveOrderAlertContainer {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 420px;
+            width: calc(100vw - 48px);
+            pointer-events: none;
+        }
+
+        .live-order-card {
+            pointer-events: auto;
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid rgba(47, 127, 107, 0.25);
+            border-left: 6px solid #2f7f6b;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(47, 127, 107, 0.1);
+            padding: 16px 18px 18px;
+            position: relative;
+            overflow: hidden;
+            animation: slideInOrder 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.2s, opacity 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        @keyframes slideInOrder {
+            from { transform: translateX(115%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOutOrder {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(115%); opacity: 0; }
+        }
+
+        .live-order-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .live-order-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(47, 127, 107, 0.12);
+            color: #2f7f6b;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .live-order-badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2f7f6b;
+            display: inline-block;
+            animation: pulseDot 1.5s infinite;
+        }
+
+        @keyframes pulseDot {
+            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(47, 127, 107, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(47, 127, 107, 0); }
+            100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(47, 127, 107, 0); }
+        }
+
+        .live-order-close {
+            background: none;
+            border: none;
+            font-size: 1.35rem;
+            color: #888;
+            cursor: pointer;
+            padding: 0 4px;
+            border-radius: 6px;
+            line-height: 1;
+            transition: color 0.15s;
+        }
+        .live-order-close:hover { color: #1a1a1a; }
+
+        .live-order-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin: 0 0 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .live-order-amount {
+            color: #2f7f6b;
+            font-weight: 800;
+            font-size: 1.15rem;
+        }
+
+        .live-order-customer {
+            font-size: 0.88rem;
+            color: #333;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .live-order-items {
+            font-size: 0.82rem;
+            color: #555;
+            margin-bottom: 12px;
+            line-height: 1.4;
+            background: #f8fafc;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #eef2f6;
+        }
+
+        .live-order-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .live-order-btn-view {
+            flex: 1;
+            background: #2f7f6b;
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .live-order-btn-view:hover {
+            background: #256a59;
+            transform: translateY(-1px);
+        }
+
+        .live-order-btn-dismiss {
+            background: #f3f4f6;
+            color: #555;
+            border: 1px solid #e5e7eb;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .live-order-btn-dismiss:hover { background: #e5e7eb; color: #222; }
+
+        .live-order-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: #2f7f6b;
+            width: 100%;
+            transform-origin: left;
+            animation: progressBar 12s linear forwards;
+        }
+
+        @keyframes progressBar {
+            from { transform: scaleX(1); }
+            to { transform: scaleX(0); }
+        }
+
+        .order-row-new {
+            animation: newOrderHighlight 5s ease-out;
+        }
+
+        @keyframes newOrderHighlight {
+            0% { background-color: rgba(47, 127, 107, 0.35); }
+            50% { background-color: rgba(47, 127, 107, 0.2); }
+            100% { background-color: transparent; }
         }
     </style>
 </head>
 <body>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
     <div class="app">
         <aside class="sidebar" id="sidebar">
             <div class="brand">
                 <div class="brand-badge">JV</div>
                 <div>
-                    <h3 class="brand-title">JammailaV</h3>
+                    <h3 class="brand-title">Rhodora</h3>
                     <p class="brand-sub">Admin Panel</p>
                 </div>
             </div>
             <nav class="nav">
                 <button class="nav-btn active" data-section="dashboard"><span class="icon">📊</span> Dashboard</button>
-                <button class="nav-btn" data-section="orders"><span class="icon">🧾</span> Orders</button>
+                <button class="nav-btn" data-section="orders" style="display:flex; align-items:center;"><span class="icon">🧾</span> Orders <span class="nav-badge" id="ordersNavBadge" style="display:none; background:#2f7f6b; color:#fff; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:12px; margin-left:auto;"></span></button>
                 <button class="nav-btn" data-section="products"><span class="icon">🧴</span> Products</button>
                 <button class="nav-btn" data-section="inventory"><span class="icon">📦</span> Inventory Product</button>
                 <button id="logoutBtn" style="margin-top:auto; color: #ff5b7b;"><span class="icon">🚪</span> Logout</button>
@@ -1110,8 +2435,18 @@
 
             <div class="topbar">
                 <div class="topbar-left">
-                    <h1>JammailaV-skin Admin</h1>
+                    <h1>Rhodora Admin</h1>
                     <p>Beauty Commerce</p>
+                </div>
+                <div class="topbar-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div id="liveStatusBadge" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(47, 127, 107, 0.08); color: #2f7f6b; font-size: 0.8rem; font-weight: 600; padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(47, 127, 107, 0.2);">
+                        <span class="live-order-badge-dot"></span>
+                        <span>Live Monitor</span>
+                    </div>
+                    <button type="button" id="soundToggleBtn" title="Toggle audio chime for new orders" style="display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--border); color: var(--text); font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 20px; cursor: pointer; transition: all 0.2s;">
+                        <span id="soundToggleIcon">🔔</span>
+                        <span id="soundToggleText">Sound On</span>
+                    </button>
                 </div>
             </div>
 
@@ -1140,9 +2475,12 @@
                             <p class="cardTitle">Total Products</p>
                             <p class="cardValue" id="totalProducts">0</p>
                         </div>
-                        <div class="card">
-                            <p class="cardTitle">Out of Stock</p>
-                            <p class="cardValue" id="outOfStock">0</p>
+                        <div class="card" id="outOfStockCard" title="Click to view out of stock products">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <p class="cardTitle" style="margin:0;">Out of Stock</p>
+                                <span style="font-size:0.75rem; color:#dc2626; font-weight:600; display:inline-flex; align-items:center; gap:2px; opacity:0.85;">View &rarr;</span>
+                            </div>
+                            <p class="cardValue" id="outOfStock" style="margin-top:0.4rem;">0</p>
                         </div>
                     </div>
                 </div>
@@ -1150,14 +2488,33 @@
 
             <!-- Orders Section -->
             <div id="section-orders" class="section">
-                <div class="sectionHeader">
+                <div class="sectionHeader orders-section-header">
                     <div>
                         <h2>Orders</h2>
                         <p class="hint">Manage customer orders</p>
                     </div>
+                    <div class="orders-header-actions">
+                        <div class="orders-view-toggle" id="ordersViewToggle">
+                            <button type="button" class="view-toggle-btn active" data-view="cards" title="Cards View" aria-label="Cards view">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                                <span>Cards</span>
+                            </button>
+                            <button type="button" class="view-toggle-btn" data-view="table" title="Table View" aria-label="Table view">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                                <span>Table</span>
+                            </button>
+                        </div>
+                        <button type="button" class="btn secondary" id="renumberOrdersBtn" title="Renumber orders starting from #1" style="font-size:0.85rem; padding:0.45rem 0.85rem; border-radius:6px; cursor:pointer;">
+                            Reset IDs to #1
+                        </button>
+                    </div>
                 </div>
-                <div class="panel">
-                    <div class="table-responsive-container">
+                <div class="panel orders-panel">
+                    <!-- Cards View (Default & Mobile View) -->
+                    <div id="ordersCardsContainer" class="orders-cards-container"></div>
+
+                    <!-- Table View (Desktop Alternate) -->
+                    <div class="table-responsive-container" id="ordersTableContainer" style="display: none;">
                         <table class="orders-dashboard-table">
                             <thead>
                                 <tr>
@@ -1210,17 +2567,10 @@
                                         <option value="2">Layer 2 (Bottom)</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label>Type</label>
-                                    <select id="pType">
-                                        <option value="SINGLE">Individual (Single Product)</option>
-                                        <option value="BUNDLE">Set (Bundle)</option>
-                                        <option value="PACKAGE">Package</option>
-                                    </select>
-                                </div>
+                                <input type="hidden" id="pType" value="SINGLE">
                             </div>
 
-                            <div class="form--2col" style="margin-top: 0.75rem;">
+                            <div class="form--3col" style="margin-top: 0.75rem;">
                                 <div>
                                     <label>Price (₱)</label>
                                     <input type="number" id="pPrice" placeholder="0.00" step="0.01" min="0" required>
@@ -1228,6 +2578,10 @@
                                 <div>
                                     <label>Stock (units)</label>
                                     <input type="number" id="pStock" placeholder="0" min="0" required>
+                                </div>
+                                <div>
+                                    <label>Weight (kg)</label>
+                                    <input type="number" id="pWeight" placeholder="0.20" step="0.01" min="0.01" value="0.20" required>
                                 </div>
                             </div>
 
@@ -1288,7 +2642,7 @@
 
     <div id="invoicePrintModal"></div>
 
-    <script src="config.js"></script>
+    <script src="config.js?v=3"></script>
     <script>
         (() => {
             const API_BASE_URL = window.APP_CONFIG?.API_BASE_URL;
@@ -1344,6 +2698,12 @@
                     btn.classList.add('active');
                     const sectionId = `section-${btn.dataset.section}`;
                     document.getElementById(sectionId)?.classList.add('active');
+                    
+                    if (window.innerWidth <= 768) {
+                        document.getElementById('sidebar').classList.remove('is-open');
+                        document.getElementById('sidebarOverlay')?.classList.remove('is-active');
+                    }
+
                     if (btn.dataset.section === 'products') {
                         setTimeout(() => renderAll(), 100);
                     }
@@ -1359,13 +2719,45 @@
                 });
             });
 
-            document.getElementById('menuToggle').addEventListener('click', () => {
-                document.getElementById('sidebar').classList.toggle('is-open');
+            document.getElementById('menuToggle').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (sidebar.classList.contains('is-open')) {
+                    sidebar.classList.remove('is-open');
+                    if (overlay) overlay.classList.remove('is-active');
+                } else {
+                    sidebar.classList.add('is-open');
+                    if (overlay) overlay.classList.add('is-active');
+                }
             });
 
-            // Products Management
+            document.getElementById('sidebarOverlay').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.remove('is-open');
+                document.getElementById('sidebarOverlay').classList.remove('is-active');
+            });
+            
+            document.addEventListener('click', (e) => {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                const menuToggle = document.getElementById('menuToggle');
+                
+                if (window.innerWidth <= 768 && sidebar.classList.contains('is-open')) {
+                    if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                        sidebar.classList.remove('is-open');
+                        if (overlay) overlay.classList.remove('is-active');
+                    }
+                }
+            });
+
+            // Products & Orders Management
             let productsCache = [];
             let ordersCache = [];
+            const knownOrderIds = new Set();
+            const newlyArrivedOrderIds = new Set();
+            let isInitialOrdersLoaded = false;
+            let isPollingOrders = false;
+            let soundEnabled = localStorage.getItem('adminSoundEnabled') !== 'false';
             const inMemoryStore = {
                 storeProducts: [],
                 storeProductsLayer2: [],
@@ -1383,7 +2775,7 @@
 
             async function fetchProductsFromApi() {
                 try {
-                    const res = await fetch(`${API_BASE_URL}/api/products`);
+                    const res = await fetch(`${API_BASE_URL}/products`);
                     if (!res.ok) throw new Error(`Bad response: ${res.status}`);
                     const products = await res.json();
                     productsCache = Array.isArray(products) ? products : [];
@@ -1400,67 +2792,246 @@
                 });
             }
 
+            let currentOrdersViewMode = localStorage.getItem('adminOrdersViewMode') || 'cards';
+
+            function initOrdersViewToggle() {
+                const toggle = document.getElementById('ordersViewToggle');
+                if (!toggle) return;
+                toggle.querySelectorAll('.view-toggle-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const mode = btn.dataset.view;
+                        setOrdersViewMode(mode);
+                    });
+                });
+                setOrdersViewMode(currentOrdersViewMode);
+            }
+
+            function setOrdersViewMode(mode) {
+                currentOrdersViewMode = mode;
+                localStorage.setItem('adminOrdersViewMode', mode);
+                const cardsContainer = document.getElementById('ordersCardsContainer');
+                const tableContainer = document.getElementById('ordersTableContainer');
+                const toggle = document.getElementById('ordersViewToggle');
+
+                if (toggle) {
+                    toggle.querySelectorAll('.view-toggle-btn').forEach(b => {
+                        b.classList.toggle('active', b.dataset.view === mode);
+                    });
+                }
+
+                if (mode === 'cards') {
+                    if (cardsContainer) cardsContainer.style.display = 'grid';
+                    if (tableContainer) tableContainer.style.display = 'none';
+                } else {
+                    if (cardsContainer) cardsContainer.style.display = 'none';
+                    if (tableContainer) tableContainer.style.display = 'block';
+                }
+            }
+
+            function formatOrderDate(isoString) {
+                if (!isoString) return '';
+                try {
+                    const d = new Date(isoString);
+                    if (isNaN(d.getTime())) return '';
+                    const now = new Date();
+                    const isToday = d.toDateString() === now.toDateString();
+                    const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                    if (isToday) return `Today, ${timeStr}`;
+                    return `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${timeStr}`;
+                } catch {
+                    return '';
+                }
+            }
+
+            function getCustomerInitials(name) {
+                if (!name || typeof name !== 'string') return 'C';
+                const parts = name.trim().split(/\s+/);
+                if (parts.length >= 2) {
+                    return (parts[0][0] + parts[1][0]).toUpperCase();
+                }
+                return parts[0].slice(0, 2).toUpperCase();
+            }
+
             function renderOrdersTable() {
                 const tbody = document.getElementById('ordersTableBody');
-                if (!tbody) return;
+                const cardsContainer = document.getElementById('ordersCardsContainer');
                 const orders = getOrders();
 
                 if (!orders.length) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="hint" style="text-align:center; padding: 1.5rem;">No orders yet.</td></tr>';
+                    if (cardsContainer) {
+                        cardsContainer.innerHTML = `
+                            <div class="orders-empty-state">
+                                <div style="font-size: 2.2rem; margin-bottom: 8px;">📦</div>
+                                <h3 style="margin: 0 0 4px; color: #333; font-size: 1.05rem;">No orders yet</h3>
+                                <p class="hint" style="margin: 0;">New customer orders will appear here automatically.</p>
+                            </div>
+                        `;
+                    }
+                    if (tbody) {
+                        tbody.innerHTML = '<tr><td colspan="8" class="hint" style="text-align:center; padding: 2rem;">No orders yet.</td></tr>';
+                    }
                     return;
                 }
 
                 const statusOptions = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
 
-                tbody.innerHTML = orders.map((o) => {
-                    const items = Array.isArray(o.items) ? o.items : [];
-                    const productsLabel = items.map((it) => escapeHtml(it.productName || '')).join(', ') || '-';
-                    const qty = items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0);
-                    const total = Number(o.total ?? o.total_amount ?? 0);
-                    const currentStatus = String(o.orderStatus || 'Pending');
-                    const statusClass = currentStatus.toLowerCase();
+                // 1. Render Mobile-Friendly Order Cards
+                if (cardsContainer) {
+                    cardsContainer.innerHTML = orders.map((o) => {
+                        const items = Array.isArray(o.items) ? o.items : [];
+                        const qty = items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0);
+                        const total = Number(o.total ?? o.total_amount ?? 0);
+                        const currentStatus = String(o.orderStatus || 'Pending');
+                        const statusClass = currentStatus.toLowerCase();
+                        const isNew = newlyArrivedOrderIds.has(Number(o.id));
+                        const dateText = formatOrderDate(o.createdAt);
+                        const initials = getCustomerInitials(o.customerName);
+                        const paymentStatusClass = String(o.paymentStatus || 'pending').toLowerCase();
 
-                    return `
-                        <tr>
-                            <td class="ordersColId">#${o.id}</td>
-                            <td class="ordersColCustomer" title="${escapeHtml(o.customerName || '')}">${escapeHtml(o.customerName || '')}<br><span class="hint">${escapeHtml(o.phone || '')}</span></td>
-                            <td class="ordersColProducts" title="${escapeHtml(items.map((it) => it.productName || '').join(', '))}">${productsLabel}</td>
-                            <td class="ordersColQty">${qty}</td>
-                            <td class="ordersColTotal">₱${total.toFixed(2)}</td>
-                            <td class="ordersColPayment">${escapeHtml(o.paymentMethod || '')}<br><span class="hint">${escapeHtml(o.paymentStatus || '')}</span></td>
-                            <td class="ordersColStatus">
-                                <select class="orderStatusSelect ${statusClass}" data-order-id="${o.id}">
-                                    ${statusOptions.map((s) => `<option value="${s}" ${s.toLowerCase() === statusClass ? 'selected' : ''}>${s}</option>`).join('')}
-                                </select>
-                            </td>
-                            <td class="ordersColActions">
-                                <div style="display:flex; gap:6px;">
-                                    <button type="button" class="btn viewOrderBtn" data-order-id="${o.id}" title="View" aria-label="View order" style="padding: 0.5rem; width: 34px; height: 34px; display:inline-flex; align-items:center; justify-content:center;">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                                            <circle cx="12" cy="12" r="2.75" stroke="currentColor" stroke-width="1.8"/>
+                        return `
+                            <div class="order-card ${isNew ? 'order-card-new' : ''}" data-order-id="${o.id}">
+                                <div class="order-card-top">
+                                    <div class="order-card-badge-wrap">
+                                        <span class="order-card-id">#${o.id}</span>
+                                        ${dateText ? `<span class="order-card-time" title="${escapeHtml(dateText)}">${escapeHtml(dateText)}</span>` : ''}
+                                    </div>
+                                    <div class="order-card-status-wrap">
+                                        <select class="orderStatusSelect ${statusClass}" data-order-id="${o.id}" aria-label="Order status">
+                                            ${statusOptions.map((s) => `<option value="${s}" ${s.toLowerCase() === statusClass ? 'selected' : ''}>${s}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="order-card-customer">
+                                    <div class="order-customer-avatar">${initials}</div>
+                                    <div class="order-customer-details">
+                                        <div class="order-customer-name">${escapeHtml(o.customerName || 'Guest Customer')}</div>
+                                        <div class="order-customer-contact">
+                                            ${o.phone ? `
+                                                <a href="tel:${escapeHtml(o.phone)}" class="order-phone-link" title="Call customer">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                                                    </svg>
+                                                    <span>${escapeHtml(o.phone)}</span>
+                                                </a>
+                                            ` : '<span class="hint" style="font-size:0.78rem;">No phone provided</span>'}
+                                        </div>
+                                        ${o.address ? `<div class="order-address-preview" title="${escapeHtml(o.address)}">📍 ${escapeHtml(o.address)}</div>` : ''}
+                                    </div>
+                                </div>
+
+                                <div class="order-card-products">
+                                    <div class="order-products-header">
+                                        <span>🛍️ Products</span>
+                                        <span class="order-items-badge">${qty} ${qty === 1 ? 'item' : 'items'}</span>
+                                    </div>
+                                    <div class="order-products-chips">
+                                        ${items.length ? items.map((it) => `
+                                            <div class="order-product-chip">
+                                                <span class="order-chip-name">${escapeHtml(it.productName || 'Product')}</span>
+                                                <span class="order-chip-qty">×${it.quantity || 1}</span>
+                                            </div>
+                                        `).join('') : '<span class="hint" style="font-size:0.8rem;">No items</span>'}
+                                    </div>
+                                </div>
+
+                                <div class="order-card-summary">
+                                    <div class="order-summary-box">
+                                        <span class="summary-label">Total Amount</span>
+                                        <span class="summary-value total-highlight">₱${total.toFixed(2)}</span>
+                                    </div>
+                                    <div class="order-summary-box">
+                                        <span class="summary-label">Payment</span>
+                                        <span class="summary-value payment-method">${escapeHtml(o.paymentMethod || 'COD')}</span>
+                                        <span class="summary-sub status-sub ${paymentStatusClass}">${escapeHtml(o.paymentStatus || 'Pending')}</span>
+                                    </div>
+                                </div>
+
+                                <div class="order-card-actions">
+                                    <button type="button" class="btn viewOrderBtn order-card-btn-view" data-order-id="${o.id}" title="View Order Details" aria-label="View order details">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7Z"/>
+                                            <circle cx="12" cy="12" r="2.75"/>
                                         </svg>
+                                        <span>View Details</span>
                                     </button>
-                                    <button type="button" class="btn danger deleteOrderBtn" data-order-id="${o.id}" title="Delete" aria-label="Delete order" style="padding: 0.5rem; width: 34px; height: 34px; display:inline-flex; align-items:center; justify-content:center;">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M4 7h16M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2M6.5 7l.6 12.1A2 2 0 0 0 9.1 21h5.8a2 2 0 0 0 2-1.9L17.5 7M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <button type="button" class="btn danger deleteOrderBtn order-card-btn-delete" data-order-id="${o.id}" title="Delete Order" aria-label="Delete order">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M4 7h16M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2M6.5 7l.6 12.1A2 2 0 0 0 9.1 21h5.8a2 2 0 0 0 2-1.9L17.5 7M10 11v6M14 11v6"/>
                                         </svg>
+                                        <span>Delete</span>
                                     </button>
                                 </div>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+                            </div>
+                        `;
+                    }).join('');
+                }
 
-                tbody.querySelectorAll('.orderStatusSelect').forEach((select) => {
-                    select.addEventListener('change', () => updateOrderStatus(Number(select.dataset.orderId), select.value, select));
-                });
-                tbody.querySelectorAll('.deleteOrderBtn').forEach((btn) => {
-                    btn.addEventListener('click', () => deleteOrder(Number(btn.dataset.orderId)));
-                });
-                tbody.querySelectorAll('.viewOrderBtn').forEach((btn) => {
-                    btn.addEventListener('click', () => openOrderDetailsModal(Number(btn.dataset.orderId)));
-                });
+                // 2. Render Table Rows (for optional desktop Table View)
+                if (tbody) {
+                    tbody.innerHTML = orders.map((o) => {
+                        const items = Array.isArray(o.items) ? o.items : [];
+                        const productsLabel = items.map((it) => `${escapeHtml(it.productName || '')} (${it.quantity || 1})`).join(', ') || '-';
+                        const qty = items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0);
+                        const total = Number(o.total ?? o.total_amount ?? 0);
+                        const currentStatus = String(o.orderStatus || 'Pending');
+                        const statusClass = currentStatus.toLowerCase();
+                        const isNew = newlyArrivedOrderIds.has(Number(o.id));
+
+                        return `
+                            <tr class="${isNew ? 'order-row-new' : ''}" data-order-id="${o.id}">
+                                <td class="ordersColId">#${o.id}</td>
+                                <td class="ordersColCustomer" title="${escapeHtml(o.customerName || '')}">
+                                    <strong>${escapeHtml(o.customerName || '')}</strong><br>
+                                    <span class="hint">${escapeHtml(o.phone || '')}</span>
+                                </td>
+                                <td class="ordersColProducts" title="${escapeHtml(items.map((it) => it.productName || '').join(', '))}">
+                                    ${productsLabel}
+                                </td>
+                                <td class="ordersColQty">${qty}</td>
+                                <td class="ordersColTotal">₱${total.toFixed(2)}</td>
+                                <td class="ordersColPayment">
+                                    ${escapeHtml(o.paymentMethod || '')}<br>
+                                    <span class="hint">${escapeHtml(o.paymentStatus || '')}</span>
+                                </td>
+                                <td class="ordersColStatus">
+                                    <select class="orderStatusSelect ${statusClass}" data-order-id="${o.id}">
+                                        ${statusOptions.map((s) => `<option value="${s}" ${s.toLowerCase() === statusClass ? 'selected' : ''}>${s}</option>`).join('')}
+                                    </select>
+                                </td>
+                                <td class="ordersColActions">
+                                    <div style="display:flex; gap:6px; flex-direction:row;">
+                                        <button type="button" class="btn viewOrderBtn" data-order-id="${o.id}" title="View" aria-label="View order" style="padding: 0.5rem; width: 34px; height: 34px; display:inline-flex; align-items:center; justify-content:center;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                                <circle cx="12" cy="12" r="2.75" stroke="currentColor" stroke-width="1.8"/>
+                                            </svg>
+                                        </button>
+                                        <button type="button" class="btn danger deleteOrderBtn" data-order-id="${o.id}" title="Delete" aria-label="Delete order" style="padding: 0.5rem; width: 34px; height: 34px; display:inline-flex; align-items:center; justify-content:center;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M4 7h16M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2M6.5 7l.6 12.1A2 2 0 0 0 9.1 21h5.8a2 2 0 0 0 2-1.9L17.5 7M10 11v6M14 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                // 3. Attach Event Listeners to both cards and table elements
+                const ordersPanel = document.querySelector('#section-orders .panel');
+                if (ordersPanel) {
+                    ordersPanel.querySelectorAll('.orderStatusSelect').forEach((select) => {
+                        select.addEventListener('change', () => updateOrderStatus(Number(select.dataset.orderId), select.value, select));
+                    });
+                    ordersPanel.querySelectorAll('.deleteOrderBtn').forEach((btn) => {
+                        btn.addEventListener('click', () => deleteOrder(Number(btn.dataset.orderId)));
+                    });
+                    ordersPanel.querySelectorAll('.viewOrderBtn').forEach((btn) => {
+                        btn.addEventListener('click', () => openOrderDetailsModal(Number(btn.dataset.orderId)));
+                    });
+                }
             }
 
             function ensureOrderDetailsModal() {
@@ -1469,24 +3040,44 @@
 
                 modal = document.createElement('div');
                 modal.id = 'orderDetailsModal';
-                modal.style.cssText = `
-                    display:none; position:fixed; inset:0; z-index:10000;
-                    background: rgba(0,0,0,0.45); align-items:center; justify-content:center; padding: 1rem;
-                `;
                 modal.innerHTML = `
-                    <div class="card" style="width:100%; max-width:480px; max-height:90vh; overflow:auto; padding:1.5rem;">
+                    <div class="card od-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="odModalTitle">
                         <div class="odModalHeader">
-                            <h3>Order Details</h3>
-                            <button type="button" class="btn secondary" id="orderDetailsCloseBtn" style="padding:0.35rem 0.75rem;">Close</button>
+                            <div class="odHeaderLeft">
+                                <div class="odHeaderIcon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                                        <path d="M3 6h18"/>
+                                        <path d="M16 10a4 4 0 0 1-8 0"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 id="odModalTitle">Order Details</h3>
+                                    <div class="odHeaderSubtitle" id="odHeaderSubtitle">Overview & Information</div>
+                                </div>
+                            </div>
+                            <button type="button" class="odCloseBtn" id="orderDetailsCloseBtn" aria-label="Close modal" title="Close modal">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"/>
+                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                            </button>
                         </div>
-                        <div id="orderDetailsBody"></div>
+                        <div id="orderDetailsBody" class="odModalBody"></div>
+                        <div class="odModalFooter">
+                            <button type="button" class="btn secondary odFooterCloseBtn" id="orderDetailsFooterCloseBtn">Close</button>
+                        </div>
                     </div>
                 `;
                 document.body.appendChild(modal);
 
                 const close = () => { modal.style.display = 'none'; };
                 modal.querySelector('#orderDetailsCloseBtn').addEventListener('click', close);
+                modal.querySelector('#orderDetailsFooterCloseBtn').addEventListener('click', close);
                 modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && modal.style.display === 'flex') close();
+                });
 
                 return modal;
             }
@@ -1500,70 +3091,252 @@
 
                 const modal = ensureOrderDetailsModal();
                 const body = modal.querySelector('#orderDetailsBody');
+                const subtitle = modal.querySelector('#odHeaderSubtitle');
                 const items = Array.isArray(order.items) ? order.items : [];
                 const total = Number(order.total ?? order.total_amount ?? 0);
                 const receiptUrl = order.customerReceiptUrl ? String(order.customerReceiptUrl) : '';
+                const currentStatus = String(order.orderStatus || 'Pending');
+                const orderStatusClass = currentStatus.toLowerCase();
+                const paymentStatusClass = String(order.paymentStatus || 'pending').toLowerCase();
+                const initials = getCustomerInitials(order.customerName);
+                const dateText = formatOrderDate(order.createdAt);
+                const totalQuantity = items.reduce((sum, it) => sum + (Number(it.quantity) || 1), 0);
+                const statusOptions = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
 
-                const orderStatusClass = String(order.orderStatus || 'Pending').toLowerCase();
+                if (subtitle) {
+                    subtitle.textContent = `Order #${order.id} • ${dateText || 'Recently placed'}`;
+                }
 
                 body.innerHTML = `
-                    <div class="odSection">
-                        <div class="odSectionTitle">Order #${order.id}</div>
-                        <div class="odGrid">
-                            <div class="odField">
-                                <div class="odLabel">Status</div>
-                                <span class="status ${orderStatusClass}">${escapeHtml(order.orderStatus || 'Pending')}</span>
+                    <!-- 1. Status & Payment Card -->
+                    <div class="odSubCard odStatusCard">
+                        <div class="odCardTop">
+                            <div class="odMetaLeft">
+                                <span class="odOrderNumBadge">#${order.id}</span>
+                                ${dateText ? `<span class="odDateMeta">📅 ${escapeHtml(dateText)}</span>` : ''}
                             </div>
-                            <div class="odField">
-                                <div class="odLabel">Payment</div>
-                                <div class="odValue">${escapeHtml(order.paymentMethod || '')} &middot; ${escapeHtml(order.paymentStatus || '')}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="odSection">
-                        <div class="odSectionTitle">Buyer Information</div>
-                        <div class="odGrid">
-                            <div class="odField">
-                                <div class="odLabel">Customer</div>
-                                <div class="odValue">${escapeHtml(order.customerName || '')}</div>
-                            </div>
-                            <div class="odField">
-                                <div class="odLabel">Phone</div>
-                                <div class="odValue">${escapeHtml(order.phone || '') || '&mdash;'}</div>
-                            </div>
-                            <div class="odField odFull">
-                                <div class="odLabel">Address</div>
-                                <div class="odValue">${escapeHtml(order.address || '') || '<span class="hint">Not provided</span>'}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="odSection">
-                        <div class="odSectionTitle">Products</div>
-                        <div class="odProductsList">
-                            ${items.map((it) => `
-                                <div class="odProductRow">
-                                    <span>${escapeHtml(it.productName || '')}</span>
-                                    <span>x${it.quantity || 0}</span>
+                            <div class="odMetaRight">
+                                <div class="odStatusControl">
+                                    <span class="odFieldLabel">Status</span>
+                                    <select class="orderStatusSelect ${orderStatusClass}" data-order-id="${order.id}" aria-label="Order status">
+                                        ${statusOptions.map((s) => `<option value="${s}" ${s.toLowerCase() === orderStatusClass ? 'selected' : ''}>${s}</option>`).join('')}
+                                    </select>
                                 </div>
-                            `).join('') || '<div class="hint">No products</div>'}
+                            </div>
                         </div>
-                        <div class="odTotalRow">
-                            <span class="odLabel">Total</span>
-                            <span class="odValue">₱${total.toFixed(2)}</span>
+                        <div class="odCardDivider"></div>
+                        <div class="odPaymentGrid">
+                            <div class="odPaymentBox">
+                                <span class="odFieldLabel">Payment Method</span>
+                                <div class="odPaymentMethod">
+                                    <span class="odMethodIcon">💵</span>
+                                    <span>${escapeHtml(order.paymentMethod || 'Cash on Delivery')}</span>
+                                </div>
+                            </div>
+                            <div class="odPaymentBox">
+                                <span class="odFieldLabel">Payment Status</span>
+                                <div class="odPaymentStatusWrap">
+                                    <span class="odPaymentStatusBadge ${paymentStatusClass}">
+                                        ${escapeHtml(order.paymentStatus || 'Pending')}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="odSection">
-                        <div class="odSectionTitle">Receipt</div>
+                    <!-- 2. Buyer Information Card -->
+                    <div class="odSubCard odBuyerCard">
+                        <div class="odSubCardHeader">
+                            <div class="odSubCardTitle">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                <span>Buyer Information</span>
+                            </div>
+                        </div>
+                        <div class="odCustomerRow">
+                            <div class="odCustomerAvatar">${initials}</div>
+                            <div class="odCustomerInfo">
+                                <div class="odCustomerName">${escapeHtml(order.customerName || 'Guest Customer')}</div>
+                                <div class="odCustomerContact">
+                                    ${order.phone ? `
+                                        <a href="tel:${escapeHtml(order.phone)}" class="odPhoneBtn" title="Call customer">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                                            </svg>
+                                            <span>${escapeHtml(order.phone)}</span>
+                                        </a>
+                                        <button type="button" class="odCopyBtn" data-copy="${escapeHtml(order.phone)}" title="Copy phone number">Copy</button>
+                                    ` : '<span class="odHint">No phone provided</span>'}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="odAddressBlock">
+                            <div class="odAddressHeader">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                <span>Delivery Address</span>
+                            </div>
+                            <div class="odAddressContent">
+                                ${order.address ? `
+                                    <div class="odAddressText">${escapeHtml(order.address)}</div>
+                                    <button type="button" class="odCopyBtn odCopyAddressBtn" data-copy="${escapeHtml(order.address)}" title="Copy full address">Copy Address</button>
+                                ` : '<span class="odHint">No address provided</span>'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Shipping Information Card -->
+                    <div class="odSubCard odShippingCard">
+                        <div class="odSubCardHeader">
+                            <div class="odSubCardTitle">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
+                                    <path d="M15 18H9"/>
+                                    <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14v10Z"/>
+                                    <circle cx="17" cy="18" r="2"/>
+                                    <circle cx="7" cy="18" r="2"/>
+                                </svg>
+                                <span>Shipping Information</span>
+                            </div>
+                        </div>
+                        <div class="odShippingGrid">
+                            <div class="odShippingBox">
+                                <span class="odFieldLabel">Courier</span>
+                                <div class="odShippingValue">
+                                    ${order.courierName ? `
+                                        <span class="odCourierBadge">🚚 ${escapeHtml(order.courierName)}</span>
+                                    ` : '<span class="odHint">Not assigned</span>'}
+                                </div>
+                            </div>
+                            <div class="odShippingBox">
+                                <span class="odFieldLabel">Tracking Number</span>
+                                <div class="odShippingValue">
+                                    ${order.trackingNumber ? `
+                                        <div class="odTrackingWrap">
+                                            <code class="odTrackingCode">${escapeHtml(order.trackingNumber)}</code>
+                                            <button type="button" class="odCopyBtn" data-copy="${escapeHtml(order.trackingNumber)}" title="Copy tracking number">Copy</button>
+                                        </div>
+                                    ` : '<span class="odHint">Not assigned</span>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Products Card -->
+                    <div class="odSubCard odProductsCard">
+                        <div class="odSubCardHeader">
+                            <div class="odSubCardTitle">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+                                    <path d="m3.3 7 8.7 5 8.7-5"/>
+                                    <path d="M12 22V12"/>
+                                </svg>
+                                <span>Ordered Products</span>
+                            </div>
+                            <span class="odCountBadge">${totalQuantity} ${totalQuantity === 1 ? 'item' : 'items'}</span>
+                        </div>
+                        <div class="odProductsList">
+                            ${items.length ? items.map((it) => {
+                                const price = Number(it.price ?? it.unitPrice ?? 0);
+                                const sub = Number(it.subtotal ?? (price ? price * (Number(it.quantity) || 1) : 0));
+                                return `
+                                    <div class="odProductItem">
+                                        <div class="odProductLeft">
+                                            <div class="odProductIcon">✨</div>
+                                            <div class="odProductDetails">
+                                                <div class="odProductName">${escapeHtml(it.productName || 'Beauty Product')}</div>
+                                                ${price > 0 ? `<div class="odProductPrice">₱${price.toFixed(2)} each</div>` : ''}
+                                            </div>
+                                        </div>
+                                        <div class="odProductRight">
+                                            <span class="odQtyBadge">x${it.quantity || 1}</span>
+                                            ${sub > 0 ? `<span class="odSubtotal">₱${sub.toFixed(2)}</span>` : ''}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('') : '<div class="odHint" style="padding: 0.5rem 0;">No products listed</div>'}
+                        </div>
+                        <div class="odTotalSummaryBox">
+                            <div class="odTotalRow">
+                                <span class="odTotalLabel">Total Amount</span>
+                                <span class="odTotalHighlight">₱${total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Payment Receipt Card -->
+                    <div class="odSubCard odReceiptCard">
+                        <div class="odSubCardHeader">
+                            <div class="odSubCardTitle">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>
+                                    <path d="M16 8h-8"/>
+                                    <path d="M16 12h-8"/>
+                                    <path d="M12 16H8"/>
+                                </svg>
+                                <span>Proof of Payment / Receipt</span>
+                            </div>
+                        </div>
                         <div class="odReceiptBox">
-                            ${receiptUrl
-                                ? `<a href="${escapeHtml(receiptUrl)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHtml(receiptUrl)}" alt="Receipt" /></a>`
-                                : '<span class="hint">No receipt uploaded</span>'}
+                            ${receiptUrl ? `
+                                <div class="odReceiptImgWrap">
+                                    <a href="${escapeHtml(receiptUrl)}" target="_blank" rel="noopener noreferrer" title="Click to view full image in new tab">
+                                        <img src="${escapeHtml(receiptUrl)}" alt="Receipt" loading="lazy" />
+                                    </a>
+                                </div>
+                                <div class="odReceiptActions">
+                                    <a href="${escapeHtml(receiptUrl)}" target="_blank" rel="noopener noreferrer" class="odReceiptViewBtn">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                            <polyline points="15 3 21 3 21 9"/>
+                                            <line x1="10" y1="14" x2="21" y2="3"/>
+                                        </svg>
+                                        <span>View Full Image</span>
+                                    </a>
+                                </div>
+                            ` : `
+                                <div class="odReceiptEmpty">
+                                    <span style="font-size:1.75rem;">🧾</span>
+                                    <span style="font-size:0.86rem; color:#64748b; font-weight:500;">No receipt uploaded</span>
+                                    <span style="font-size:0.76rem; color:#94a3b8;">Customer has not attached a payment proof file.</span>
+                                </div>
+                            `}
                         </div>
                     </div>
                 `;
+
+                // Wire up Order Status dropdown in modal
+                const modalSelect = body.querySelector('.orderStatusSelect');
+                if (modalSelect) {
+                    modalSelect.addEventListener('change', () => {
+                        updateOrderStatus(Number(order.id), modalSelect.value, modalSelect);
+                    });
+                }
+
+                // Wire up Copy buttons
+                body.querySelectorAll('.odCopyBtn').forEach((btn) => {
+                    btn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const text = btn.dataset.copy;
+                        if (!text) return;
+                        try {
+                            await navigator.clipboard.writeText(text);
+                            const orig = btn.innerHTML;
+                            btn.textContent = 'Copied!';
+                            btn.classList.add('copied');
+                            setTimeout(() => {
+                                btn.innerHTML = orig;
+                                btn.classList.remove('copied');
+                            }, 1800);
+                        } catch {
+                            showAdminToast({ type: 'info', text: `Copied: ${text}` });
+                        }
+                    });
+                });
 
                 modal.style.display = 'flex';
             }
@@ -1574,24 +3347,107 @@
                     showAdminToast({ type: 'error', text: 'Authentication required. Please log in again.' });
                     return;
                 }
+                
+                // If the status is Shipped, ask for courier and tracking number
+                if (newStatus.toLowerCase() === 'shipped') {
+                    showShippingModal(orderId, newStatus, selectEl, authHeader);
+                    return;
+                }
+
+                await sendOrderStatusUpdate(orderId, newStatus, null, null, selectEl, authHeader);
+            }
+
+            async function sendOrderStatusUpdate(orderId, newStatus, courierName, trackingNumber, selectEl, authHeader) {
                 try {
-                    const res = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}/status`, {
+                    const payload = { orderStatus: newStatus };
+                    if (courierName) payload.courierName = courierName;
+                    if (trackingNumber) payload.trackingNumber = trackingNumber;
+
+                    const res = await fetch(`${API_BASE_URL}/admin/orders/${orderId}/status`, {
                         method: 'PATCH',
                         headers: {
                             'Authorization': authHeader,
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ orderStatus: newStatus }),
+                        body: JSON.stringify(payload),
                     });
                     if (!res.ok) throw new Error(`Bad response: ${res.status}`);
-                    if (selectEl) {
-                        selectEl.className = `orderStatusSelect ${newStatus.toLowerCase()}`;
-                    }
+                    document.querySelectorAll(`.orderStatusSelect[data-order-id="${orderId}"]`).forEach((el) => {
+                        el.className = `orderStatusSelect ${newStatus.toLowerCase()}`;
+                        el.value = newStatus;
+                    });
                     showAdminToast({ type: 'success', text: `Order #${orderId} status updated to ${newStatus}.` });
                 } catch (err) {
                     console.error('[admin] updateOrderStatus failed', err);
                     showAdminToast({ type: 'error', text: 'Failed to update order status.' });
+                    if (selectEl) {
+                        renderOrders();
+                    }
                 }
+            }
+
+            function showShippingModal(orderId, newStatus, selectEl, authHeader) {
+                let modal = document.getElementById('shippingDetailsModal');
+                if (!modal) {
+                    modal = document.createElement('div');
+                    modal.id = 'shippingDetailsModal';
+                    modal.style.cssText = `
+                        display:none; position:fixed; inset:0; z-index:10000;
+                        background: rgba(0,0,0,0.45); align-items:center; justify-content:center; padding: 1rem;
+                    `;
+                    modal.innerHTML = `
+                        <div class="card" style="width:100%; max-width:400px; padding:1.5rem; background:#fff; border-radius:8px; position:relative;">
+                            <h3 style="margin-top:0; margin-bottom:1rem; font-family:'Playfair Display', serif;">Shipping Details</h3>
+                            <div class="formGroup" style="margin-bottom:1rem;">
+                                <label for="courierNameInput" style="display:block; margin-bottom:0.5rem; font-size:0.9rem; font-weight:600;">Courier</label>
+                                <select id="courierNameInput" class="inputField" style="width:100%; padding:0.75rem; border:1px solid #ccc; border-radius:4px; font-size:16px;">
+                                    <option value="J&T Express">J&T Express</option>
+                                    <option value="Flash Express">Flash Express</option>
+                                    <option value="LBC">LBC</option>
+                                </select>
+                            </div>
+                            <div class="formGroup" style="margin-bottom:1rem;">
+                                <label for="trackingNumberInput" style="display:block; margin-bottom:0.5rem; font-size:0.9rem; font-weight:600;">Tracking Number</label>
+                                <input type="text" id="trackingNumberInput" class="inputField" placeholder="Enter tracking number" style="width:100%; padding:0.75rem; border:1px solid #ccc; border-radius:4px; font-size:16px;" />
+                            </div>
+                            <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.5rem;">
+                                <button type="button" class="btn secondary" id="cancelShippingBtn" style="padding:0.75rem 1rem; background:#eee; border:none; border-radius:4px; cursor:pointer;">Cancel</button>
+                                <button type="button" class="btn" id="saveShippingBtn" style="padding:0.75rem 1rem; background:#222; color:#fff; border:none; border-radius:4px; cursor:pointer;">Save</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                }
+
+                document.getElementById('trackingNumberInput').value = '';
+                modal.style.display = 'flex';
+
+                const cancelBtn = document.getElementById('cancelShippingBtn');
+                const saveBtn = document.getElementById('saveShippingBtn');
+
+                const cleanup = () => {
+                    modal.style.display = 'none';
+                    cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+                    saveBtn.replaceWith(saveBtn.cloneNode(true));
+                };
+
+                document.getElementById('cancelShippingBtn').addEventListener('click', () => {
+                    cleanup();
+                    renderOrders();
+                });
+
+                document.getElementById('saveShippingBtn').addEventListener('click', () => {
+                    const courierName = document.getElementById('courierNameInput').value;
+                    const trackingNumber = document.getElementById('trackingNumberInput').value;
+                    
+                    if (!trackingNumber.trim()) {
+                        alert("Please enter a tracking number.");
+                        return;
+                    }
+
+                    cleanup();
+                    sendOrderStatusUpdate(orderId, newStatus, courierName, trackingNumber, selectEl, authHeader);
+                });
             }
 
             async function deleteOrder(orderId) {
@@ -1604,7 +3460,7 @@
                     return;
                 }
                 try {
-                    const res = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}`, {
+                    const res = await fetch(`${API_BASE_URL}/admin/orders/${orderId}`, {
                         method: 'DELETE',
                         headers: { 'Authorization': authHeader },
                     });
@@ -1617,6 +3473,33 @@
                 }
             }
 
+            async function renumberOrders() {
+                const ok = window.confirm('Renumber all orders starting from #1? This will adjust existing Order IDs to 1, 2, 3... sequentially.');
+                if (!ok) return;
+                const authHeader = getBasicAuthHeader();
+                if (!authHeader) {
+                    showAdminToast({ type: 'error', text: 'Authentication required. Please log in again.' });
+                    return;
+                }
+                const btn = document.getElementById('renumberOrdersBtn');
+                if (btn) btn.disabled = true;
+                try {
+                    const res = await fetch(`${API_BASE_URL}/admin/orders/renumber`, {
+                        method: 'POST',
+                        headers: { 'Authorization': authHeader }
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.success) throw new Error(data?.error || `Bad response: ${res.status}`);
+                    showAdminToast({ type: 'success', text: 'Orders successfully renumbered starting from #1.' });
+                    renderOrders();
+                } catch (err) {
+                    console.error('[admin] renumberOrders failed', err);
+                    showAdminToast({ type: 'error', text: 'Failed to renumber orders.' });
+                } finally {
+                    if (btn) btn.disabled = false;
+                }
+            }
+
             async function fetchOrdersFromApi() {
                 try {
                     const authHeader = getBasicAuthHeader();
@@ -1625,7 +3508,7 @@
                         return [];
                     }
 
-                    const res = await fetch(`${API_BASE_URL}/api/admin/orders`, {
+                    const res = await fetch(`${API_BASE_URL}/admin/orders`, {
                         method: 'GET',
                         headers: {
                             'Authorization': authHeader
@@ -1635,10 +3518,282 @@
                     if (!res.ok) throw new Error(`Bad response: ${res.status}`);
                     const orders = await res.json();
                     ordersCache = Array.isArray(orders) ? orders : [];
+                    if (!isInitialOrdersLoaded && ordersCache.length > 0) {
+                        ordersCache.forEach((o) => knownOrderIds.add(Number(o.id)));
+                        isInitialOrdersLoaded = true;
+                    }
+                    updateOrdersBadge();
                     return ordersCache;
                 } catch (err) {
                     console.error('[admin] fetchOrdersFromApi failed', err);
                     return [];
+                }
+            }
+
+            // Live Order Alert Engine
+            function updateOrdersBadge() {
+                const badge = document.getElementById('ordersNavBadge');
+                if (!badge) return;
+                const orders = getOrders();
+                const pendingCount = orders.filter((o) => String(o.orderStatus || 'Pending').toLowerCase() === 'pending').length;
+                if (pendingCount > 0) {
+                    badge.textContent = String(pendingCount);
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+
+            function playNewOrderSound() {
+                if (!soundEnabled) return;
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioCtx) return;
+                    const ctx = new AudioCtx();
+                    if (ctx.state === 'suspended') {
+                        ctx.resume();
+                    }
+                    const now = ctx.currentTime;
+
+                    const playTone = (freq, start, duration, gainLevel) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, start);
+                        gain.gain.setValueAtTime(gainLevel, start);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(start);
+                        osc.stop(start + duration);
+                    };
+
+                    // Harmonious 3-tone cash register chime (E5 -> A5 -> E6)
+                    playTone(659.25, now, 0.3, 0.2);
+                    playTone(880.00, now + 0.12, 0.35, 0.25);
+                    playTone(1318.51, now + 0.25, 0.5, 0.3);
+                } catch (err) {
+                    console.warn('[sound] Could not play audio chime:', err);
+                }
+            }
+
+            function requestDesktopNotificationPermission() {
+                if ('Notification' in window && Notification.permission === 'default') {
+                    Notification.requestPermission();
+                }
+            }
+
+            function triggerDesktopNotification(order) {
+                if (!('Notification' in window) || Notification.permission !== 'granted') return;
+                try {
+                    const total = Number(order.total ?? order.total_amount ?? 0);
+                    const title = `🎉 New Order #${order.id} Received!`;
+                    const body = `${order.customerName || 'Customer'} ordered for ₱${total.toFixed(2)} (${order.paymentMethod || 'Cash on Delivery'})`;
+                    const n = new Notification(title, {
+                        body: body,
+                        tag: `order-${order.id}`
+                    });
+                    n.onclick = () => {
+                        window.focus();
+                        const ordersNav = document.querySelector('.nav-btn[data-section="orders"]');
+                        if (ordersNav && !ordersNav.classList.contains('active')) ordersNav.click();
+                        openOrderDetailsModal(Number(order.id));
+                        n.close();
+                    };
+                } catch (e) {
+                    // ignore notification error
+                }
+            }
+
+            function ensureLiveOrderAlertContainer() {
+                let container = document.getElementById('liveOrderAlertContainer');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'liveOrderAlertContainer';
+                    document.body.appendChild(container);
+                }
+                return container;
+            }
+
+            function showNewOrderPopup(order) {
+                playNewOrderSound();
+                triggerDesktopNotification(order);
+
+                const container = ensureLiveOrderAlertContainer();
+                const card = document.createElement('div');
+                card.className = 'live-order-card';
+                card.id = `liveOrderCard-${order.id}`;
+
+                const total = Number(order.total ?? order.total_amount ?? 0);
+                const items = Array.isArray(order.items) ? order.items : [];
+                const itemsSummary = items.map((it) => `${it.productName || 'Product'} × ${it.quantity || 1}`).join(', ') || '1 item';
+                const customer = escapeHtml(order.customerName || 'Guest Customer');
+                const phone = order.phone ? escapeHtml(order.phone) : '';
+                const payment = escapeHtml(order.paymentMethod || 'Cash on Delivery');
+
+                card.innerHTML = `
+                    <div class="live-order-header">
+                        <div class="live-order-badge">
+                            <span class="live-order-badge-dot"></span>
+                            <span>New Order Received!</span>
+                        </div>
+                        <button type="button" class="live-order-close" title="Close notification" aria-label="Close notification">&times;</button>
+                    </div>
+                    <div class="live-order-title">
+                        <span>Order #${order.id}</span>
+                        <span class="live-order-amount">₱${total.toFixed(2)}</span>
+                    </div>
+                    <div class="live-order-customer">
+                        <span>👤 <strong>${customer}</strong></span>
+                        ${phone ? `<span style="color:#666; font-size:0.82rem;">&bull; 📞 ${phone}</span>` : ''}
+                    </div>
+                    <div class="live-order-items">
+                        <div>🛍️ <strong>Items:</strong> ${escapeHtml(itemsSummary)}</div>
+                        <div style="margin-top:4px; color:#777; font-size:0.78rem;">💳 <strong>Payment:</strong> ${payment}</div>
+                    </div>
+                    <div class="live-order-actions">
+                        <button type="button" class="live-order-btn-view">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7Z" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="12" cy="12" r="2.75" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            View Order
+                        </button>
+                        <button type="button" class="live-order-btn-dismiss">Dismiss</button>
+                    </div>
+                    <div class="live-order-progress"></div>
+                `;
+
+                let dismissTimer = null;
+                const dismissCard = () => {
+                    if (dismissTimer) clearTimeout(dismissTimer);
+                    card.style.animation = 'slideOutOrder 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                    setTimeout(() => {
+                        if (card.parentNode) card.parentNode.removeChild(card);
+                    }, 300);
+                };
+
+                // Auto dismiss after 12 seconds
+                dismissTimer = setTimeout(dismissCard, 12000);
+
+                // Pause timer on hover
+                card.addEventListener('mouseenter', () => {
+                    if (dismissTimer) clearTimeout(dismissTimer);
+                    const pb = card.querySelector('.live-order-progress');
+                    if (pb) pb.style.animationPlayState = 'paused';
+                });
+                card.addEventListener('mouseleave', () => {
+                    const pb = card.querySelector('.live-order-progress');
+                    if (pb) pb.style.animationPlayState = 'running';
+                    dismissTimer = setTimeout(dismissCard, 5000);
+                });
+
+                card.querySelector('.live-order-close')?.addEventListener('click', dismissCard);
+                card.querySelector('.live-order-btn-dismiss')?.addEventListener('click', dismissCard);
+                card.querySelector('.live-order-btn-view')?.addEventListener('click', () => {
+                    dismissCard();
+                    const ordersNavBtn = document.querySelector('.nav-btn[data-section="orders"]');
+                    if (ordersNavBtn && !ordersNavBtn.classList.contains('active')) {
+                        ordersNavBtn.click();
+                    }
+                    openOrderDetailsModal(Number(order.id));
+                });
+
+                container.prepend(card);
+            }
+
+            function toggleSoundAlert() {
+                soundEnabled = !soundEnabled;
+                localStorage.setItem('adminSoundEnabled', String(soundEnabled));
+                updateSoundButtonUi();
+                if (soundEnabled) {
+                    playNewOrderSound();
+                    showAdminToast({ type: 'success', text: '🔔 Audio alerts enabled for new orders.' });
+                } else {
+                    showAdminToast({ type: 'success', text: '🔕 Audio alerts muted.' });
+                }
+                requestDesktopNotificationPermission();
+            }
+
+            function updateSoundButtonUi() {
+                const icon = document.getElementById('soundToggleIcon');
+                const text = document.getElementById('soundToggleText');
+                if (icon) icon.textContent = soundEnabled ? '🔔' : '🔕';
+                if (text) text.textContent = soundEnabled ? 'Sound On' : 'Muted';
+                const btn = document.getElementById('soundToggleBtn');
+                if (btn) {
+                    btn.style.opacity = soundEnabled ? '1' : '0.7';
+                }
+            }
+
+            async function pollLiveOrders() {
+                if (isPollingOrders) return;
+                if (!localStorage.getItem('isAdminLoggedIn')) return;
+                isPollingOrders = true;
+
+                try {
+                    const authHeader = getBasicAuthHeader();
+                    if (!authHeader) return;
+
+                    const res = await fetch(`${API_BASE_URL}/admin/orders`, {
+                        method: 'GET',
+                        headers: { 'Authorization': authHeader }
+                    });
+
+                    if (!res.ok) return;
+                    const freshOrders = await res.json();
+                    if (!Array.isArray(freshOrders)) return;
+
+                    if (!isInitialOrdersLoaded) {
+                        freshOrders.forEach((o) => knownOrderIds.add(Number(o.id)));
+                        ordersCache = freshOrders;
+                        isInitialOrdersLoaded = true;
+                        updateOrdersBadge();
+                        return;
+                    }
+
+                    // Compare against known orders
+                    const newOrders = freshOrders.filter((o) => !knownOrderIds.has(Number(o.id)));
+                    if (newOrders.length > 0) {
+                        // Register all new IDs immediately so they don't re-trigger
+                        newOrders.forEach((o) => {
+                            knownOrderIds.add(Number(o.id));
+                            newlyArrivedOrderIds.add(Number(o.id));
+                        });
+
+                        ordersCache = freshOrders;
+
+                        // Trigger popups for new orders (newest first)
+                        newOrders.sort((a, b) => Number(b.id) - Number(a.id));
+                        newOrders.forEach((newOrder, index) => {
+                            setTimeout(() => {
+                                showNewOrderPopup(newOrder);
+                            }, index * 450);
+                        });
+
+                        // Update orders table if currently visible
+                        const ordersSection = document.getElementById('section-orders');
+                        if (ordersSection && ordersSection.classList.contains('active')) {
+                            renderOrdersTable();
+                        }
+
+                        // Update dashboard counters if currently visible
+                        const dashboardSection = document.getElementById('section-dashboard');
+                        if (dashboardSection && dashboardSection.classList.contains('active')) {
+                            const totalOrders = freshOrders.length;
+                            const totalRevenue = freshOrders.reduce((sum, o) => sum + Number(o.total ?? o.total_amount ?? 0), 0);
+                            const totalOrdersEl = document.getElementById('totalOrders');
+                            const totalRevenueEl = document.getElementById('totalRevenue');
+                            if (totalOrdersEl) totalOrdersEl.textContent = String(totalOrders);
+                            if (totalRevenueEl) totalRevenueEl.textContent = `₱${totalRevenue.toFixed(2)}`;
+                        }
+
+                        updateOrdersBadge();
+                    }
+                } catch (err) {
+                    // network resilience
+                } finally {
+                    isPollingOrders = false;
                 }
             }
 
@@ -1658,9 +3813,133 @@
                 const outOfStockEl = document.getElementById('outOfStock');
 
                 if (totalOrdersEl) totalOrdersEl.textContent = String(totalOrders);
-                if (totalRevenueEl) totalRevenueEl.textContent = `\u20b1${totalRevenue.toFixed(2)}`;
+                if (totalRevenueEl) totalRevenueEl.textContent = `₱${totalRevenue.toFixed(2)}`;
                 if (totalProductsEl) totalProductsEl.textContent = String(totalProducts);
                 if (outOfStockEl) outOfStockEl.textContent = String(outOfStock);
+            }
+
+            function ensureOutOfStockModal() {
+                let modal = document.getElementById('outOfStockModal');
+                if (modal) return modal;
+
+                modal = document.createElement('div');
+                modal.id = 'outOfStockModal';
+                modal.style.cssText = `
+                    display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:10000;
+                    background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); align-items:center; justify-content:center; padding: 1rem;
+                `;
+                modal.innerHTML = `
+                    <div class="card" style="width:100%; max-width:540px; max-height:85vh; display:flex; flex-direction:column; padding:1.25rem; border-radius:12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; border-bottom:1px solid #eee; padding-bottom:0.75rem;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:1.3rem;">⚠️</span>
+                                <div>
+                                    <h3 style="margin:0; font-size:1.15rem; color:#111;">Out of Stock Products</h3>
+                                    <p class="hint" style="margin:0; font-size:0.85rem;" id="outOfStockModalSubtitle">Items requiring restock</p>
+                                </div>
+                            </div>
+                            <button type="button" class="btn secondary" id="outOfStockCloseBtn" style="padding:0.35rem 0.75rem; font-size:0.85rem;">Close</button>
+                        </div>
+                        <div id="outOfStockModalBody" style="overflow-y:auto; flex:1; min-height:120px; max-height:55vh; padding-right:4px;"></div>
+                        <div style="margin-top:1rem; padding-top:0.75rem; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                            <button type="button" class="btn secondary" id="outOfStockGoInventoryBtn" style="font-size:0.85rem; padding:0.45rem 0.85rem;">
+                                View in Inventory &rarr;
+                            </button>
+                            <button type="button" class="btn" id="outOfStockDoneBtn" style="font-size:0.85rem; padding:0.45rem 1rem;">
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                const close = () => { modal.style.display = 'none'; };
+                modal.querySelector('#outOfStockCloseBtn').addEventListener('click', close);
+                modal.querySelector('#outOfStockDoneBtn').addEventListener('click', close);
+                modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+                modal.querySelector('#outOfStockGoInventoryBtn').addEventListener('click', () => {
+                    close();
+                    const inventoryNav = document.querySelector('.nav-btn[data-section="inventory"]');
+                    if (inventoryNav) inventoryNav.click();
+                });
+
+                return modal;
+            }
+
+            async function openOutOfStockModal() {
+                await fetchProductsFromApi();
+                const products = getProducts();
+                const outOfStockItems = products.filter((p) => Number(p.stock ?? 0) === 0);
+
+                const modal = ensureOutOfStockModal();
+                const body = modal.querySelector('#outOfStockModalBody');
+                const subtitle = modal.querySelector('#outOfStockModalSubtitle');
+
+                if (subtitle) {
+                    subtitle.textContent = outOfStockItems.length === 1 
+                        ? '1 product currently has 0 stock' 
+                        : `${outOfStockItems.length} products currently have 0 stock`;
+                }
+
+                if (!outOfStockItems.length) {
+                    body.innerHTML = `
+                        <div style="text-align:center; padding: 2.5rem 1rem;">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎉</div>
+                            <h4 style="margin:0 0 0.35rem; color:#111; font-size:1.05rem;">All Products in Stock!</h4>
+                            <p class="hint" style="margin:0; font-size:0.9rem;">No products currently have zero stock.</p>
+                        </div>
+                    `;
+                } else {
+                    body.innerHTML = `
+                        <div style="display:flex; flex-direction:column; gap:0.65rem;">
+                            ${outOfStockItems.map((p) => {
+                                const price = Number(p.price || 0).toFixed(2);
+                                const weight = Number(p.weight_kg ?? p.weight ?? 0.20).toFixed(2);
+                                const imgUrl = resolveImageUrl(p.imageUrl);
+                                return `
+                                    <div style="display:flex; gap:0.75rem; align-items:center; padding:0.75rem; border:1px solid #fee2e2; background:#fef2f2; border-radius:10px;">
+                                        <img src="${imgUrl}" alt="${escapeHtml(p.name)}" class="outOfStockItemImg" style="width:52px; height:52px; object-fit:cover; border-radius:8px; flex-shrink:0; border:1px solid #fca5a5;">
+                                        <div style="flex:1; min-width:0;">
+                                            <div style="font-weight:600; font-size:0.95rem; color:#111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                                ${escapeHtml(p.name)}
+                                            </div>
+                                            <div style="font-size:0.82rem; color:#666; margin-top:2px;">
+                                                ₱${price} &bull; ⚖️ ${weight} kg &bull; Layer ${p.storefrontLayer || 1}
+                                            </div>
+                                            <div style="margin-top:3px;">
+                                                <span style="display:inline-block; font-size:0.72rem; font-weight:700; color:#b91c1c; background:#fee2e2; border:1px solid #fca5a5; padding:1px 6px; border-radius:4px; text-transform:uppercase;">
+                                                    Out of Stock (0 units)
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div style="flex-shrink:0;">
+                                            <button type="button" class="btn secondary restockItemBtn" data-product-id="${p.id}" style="font-size:0.8rem; padding:0.4rem 0.75rem; display:inline-flex; align-items:center; gap:4px; border-color:#f87171; color:#991b1b; background:#fff;">
+                                                ✏️ Restock
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+
+                    body.querySelectorAll('.restockItemBtn').forEach((btn) => {
+                        btn.addEventListener('click', () => {
+                            const prodId = Number(btn.dataset.productId);
+                            modal.style.display = 'none';
+                            openEditProductModal(prodId);
+                        });
+                    });
+
+                    body.querySelectorAll('.outOfStockItemImg').forEach((img) => {
+                        img.addEventListener('error', function onImgError() {
+                            img.removeEventListener('error', onImgError);
+                            img.src = NO_IMAGE_PLACEHOLDER;
+                        });
+                    });
+                }
+
+                modal.style.display = 'flex';
             }
 
             async function addProduct(e) {
@@ -1669,6 +3948,8 @@
                 const name = document.getElementById('pName').value.trim();
                 const price = Number(document.getElementById('pPrice').value);
                 const stock = Number(document.getElementById('pStock').value);
+                const rawWeight = Number(document.getElementById('pWeight')?.value || 0.20);
+                const weight = Number.isFinite(rawWeight) && rawWeight > 0 ? rawWeight : 0.20;
                 const description = document.getElementById('pDescription').value.trim();
                 const usageInstructions = document.getElementById('pUsageInstructions').value.trim();
                 const type = document.getElementById('pType').value;
@@ -1685,6 +3966,8 @@
                     form.append('name', name);
                     form.append('price', String(price));
                     form.append('stock', String(stock));
+                    form.append('weight_kg', String(weight));
+                    form.append('weight', String(weight));
                     form.append('description', description);
                     form.append('usageInstructions', usageInstructions);
                     form.append('type', type);
@@ -1697,7 +3980,7 @@
                         return;
                     }
 
-                    const res = await fetch(`${API_BASE_URL}/api/products`, {
+                    const res = await fetch(`${API_BASE_URL}/products`, {
                         method: 'POST',
                         headers: {
                             'Authorization': authHeader
@@ -1719,11 +4002,13 @@
                         return;
                     }
 
-                    productsCache = [data, ...productsCache];
+                    const enriched = { ...data, weight_kg: data?.weight_kg ?? weight, weight: data?.weight ?? weight };
+                    productsCache = [enriched, ...productsCache];
                     showAdminToast({ type: 'success', text: 'Product added successfully!' });
 
                     // Reset form
                     document.getElementById('addProductForm').reset();
+                    if (document.getElementById('pWeight')) document.getElementById('pWeight').value = '0.20';
                     document.getElementById('pImagePreview').classList.remove('show');
                     updateAddProductButtonState();
 
@@ -1738,9 +4023,10 @@
             function updateAddProductButtonState() {
                 const name = document.getElementById('pName').value.trim();
                 const price = document.getElementById('pPrice').value.trim();
+                const weight = document.getElementById('pWeight') ? document.getElementById('pWeight').value.trim() : '0.20';
                 const btn = document.querySelector('#addProductForm button[type="submit"]');
                 if (btn) {
-                    btn.disabled = !name || !price;
+                    btn.disabled = !name || !price || !weight;
                     btn.style.opacity = btn.disabled ? '0.5' : '1';
                 }
             }
@@ -1809,7 +4095,7 @@
                 const raw = String(imageUrl || '').trim();
                 if (!raw) return NO_IMAGE_PLACEHOLDER;
                 if (/^https?:\/\//i.test(raw)) return raw;
-                if (raw.startsWith('/uploads/')) return `${API_BASE_URL}${raw}`;
+                if (raw.startsWith('/uploads/')) return raw;
                 return raw;
             }
 
@@ -1841,7 +4127,7 @@
                                 <img class="inventoryImg" src="${resolveImageUrl(p.imageUrl)}" alt="${escapeHtml(p.name)}" style="width:64px; height:64px; object-fit:cover; border-radius:10px; flex-shrink:0;">
                                 <div style="flex:1; min-width:0;">
                                     <strong>${escapeHtml(p.name)}</strong>
-                                    <div class="hint">₱${Number(p.price || 0).toFixed(2)} • Stock: ${Number(p.stock ?? 0)}</div>
+                                    <div class="hint">₱${Number(p.price || 0).toFixed(2)} • Stock: ${Number(p.stock ?? 0)} • ⚖️ ${Number(p.weight_kg ?? p.weight ?? 0.20).toFixed(2)} kg</div>
                                 </div>
                                 <div style="display:flex; gap: 0.5rem; flex-shrink:0;">
                                     <button type="button" class="btn secondary editProductBtn" data-id="${p.id}" title="Edit" aria-label="Edit product" style="padding: 0.5rem; width: 36px; height: 36px; display:inline-flex; align-items:center; justify-content:center;">
@@ -1886,7 +4172,7 @@
                 }
 
                 try {
-                    const res = await fetch(`${API_BASE_URL}/api/admin/products/${id}`, {
+                    const res = await fetch(`${API_BASE_URL}/admin/products/${id}`, {
                         method: 'DELETE',
                         headers: { 'Authorization': authHeader }
                     });
@@ -1902,6 +4188,7 @@
 
                     productsCache = getProducts().filter((p) => Number(p.id) !== id);
                     renderInventoryList();
+                    renderDashboard();
                     showAdminToast({ type: 'success', text: 'Product deleted.' });
                 } catch (err) {
                     console.error('[deleteProductFromInventory] Error:', err);
@@ -1916,7 +4203,7 @@
                 modal = document.createElement('div');
                 modal.id = 'editProductModal';
                 modal.style.cssText = `
-                    display:none; position:fixed; inset:0; z-index:10000;
+                    display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:10000;
                     background: rgba(0,0,0,0.45); align-items:center; justify-content:center; padding: 1rem;
                 `;
                 modal.innerHTML = `
@@ -1938,23 +4225,20 @@
                                         <option value="2">Layer 2 (Bottom)</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label>Type</label>
-                                    <select id="eType">
-                                        <option value="SINGLE">Individual (Single Product)</option>
-                                        <option value="BUNDLE">Set (Bundle)</option>
-                                        <option value="PACKAGE">Package</option>
-                                    </select>
-                                </div>
+                                <input type="hidden" id="eType" value="SINGLE">
                             </div>
-                            <div class="form">
+                            <div class="form--3col" style="margin-top: 0.75rem;">
                                 <div>
-                                    <label>Price</label>
-                                    <input type="number" id="ePrice" step="0.01" required>
+                                    <label>Price (₱)</label>
+                                    <input type="number" id="ePrice" step="0.01" min="0" required>
                                 </div>
                                 <div>
-                                    <label>Stock</label>
+                                    <label>Stock (units)</label>
                                     <input type="number" id="eStock" min="0" required>
+                                </div>
+                                <div>
+                                    <label>Weight (kg)</label>
+                                    <input type="number" id="eWeight" step="0.01" min="0.01" required>
                                 </div>
                             </div>
                             <div style="margin-top:0.75rem;">
@@ -1998,9 +4282,13 @@
                 modal.dataset.productId = String(id);
                 modal.dataset.existingImageUrl = String(product.imageUrl || '');
 
+                const rawWeight = Number(product.weight_kg ?? product.weight ?? 0.20);
+                const safeWeight = Number.isFinite(rawWeight) && rawWeight > 0 ? rawWeight : 0.20;
+
                 modal.querySelector('#eName').value = product.name || '';
                 modal.querySelector('#ePrice').value = product.price ?? '';
                 modal.querySelector('#eStock').value = product.stock ?? '';
+                modal.querySelector('#eWeight').value = safeWeight.toFixed(2);
                 modal.querySelector('#eDescription').value = product.description || '';
                 modal.querySelector('#eUsage').value = product.usageInstructions || '';
                 modal.querySelector('#eType').value = product.type === 'BUNDLE' ? 'BUNDLE' : product.type === 'PACKAGE' ? 'PACKAGE' : 'SINGLE';
@@ -2027,6 +4315,8 @@
                 const name = modal.querySelector('#eName').value.trim();
                 const price = Number(modal.querySelector('#ePrice').value);
                 const stock = Number(modal.querySelector('#eStock').value);
+                const rawWeight = Number(modal.querySelector('#eWeight')?.value || 0.20);
+                const safeWeight = Number.isFinite(rawWeight) && rawWeight > 0 ? rawWeight : 0.20;
                 const description = modal.querySelector('#eDescription').value.trim();
                 const usageInstructions = modal.querySelector('#eUsage').value.trim();
                 const type = modal.querySelector('#eType').value;
@@ -2047,6 +4337,8 @@
                     form.append('name', name);
                     form.append('price', String(price));
                     form.append('stock', String(stock));
+                    form.append('weight_kg', String(safeWeight));
+                    form.append('weight', String(safeWeight));
                     form.append('description', description);
                     form.append('usageInstructions', usageInstructions);
                     form.append('type', type);
@@ -2054,7 +4346,7 @@
                     form.append('existingImageUrl', existingImageUrl);
                     if (file) form.append('image', file);
 
-                    const res = await fetch(`${API_BASE_URL}/api/products/${id}`, {
+                    const res = await fetch(`${API_BASE_URL}/products/${id}`, {
                         method: 'PUT',
                         headers: { 'Authorization': authHeader },
                         body: form
@@ -2069,8 +4361,9 @@
                         return;
                     }
 
-                    productsCache = getProducts().map((p) => (Number(p.id) === id ? data : p));
+                    productsCache = getProducts().map((p) => (Number(p.id) === id ? { ...p, ...data, weight_kg: data?.weight_kg ?? safeWeight, weight: data?.weight ?? safeWeight } : p));
                     renderInventoryList();
+                    renderDashboard();
                     modal.style.display = 'none';
                     showAdminToast({ type: 'success', text: 'Product updated successfully!' });
                 } catch (err) {
@@ -2103,20 +4396,39 @@ bindDropzone({
             document.getElementById('addProductForm')?.addEventListener('submit', addProduct);
             document.getElementById('pName')?.addEventListener('input', updateAddProductButtonState);
             document.getElementById('pPrice')?.addEventListener('input', updateAddProductButtonState);
+            document.getElementById('pWeight')?.addEventListener('input', updateAddProductButtonState);
             
             if (typeof updateAddProductButtonState === 'function') {
                 updateAddProductButtonState();
             }
 
-            const datePill = document.getElementById('datePill');
-            if (datePill) {
-                datePill.textContent = new Date().toLocaleDateString('en-US', {
+            const dp = document.getElementById('datePill');
+            if (dp) {
+                dp.textContent = new Date().toLocaleDateString('en-US', {
                     weekday: 'short',
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric'
-                });
+                }); 
             }
+
+            // Renumber orders button
+            document.getElementById('renumberOrdersBtn')?.addEventListener('click', renumberOrders);
+            if (typeof initOrdersViewToggle === 'function') {
+                initOrdersViewToggle();
+            }
+
+            // Out of stock card click listener
+            document.getElementById('outOfStockCard')?.addEventListener('click', openOutOfStockModal);
+
+            // Live Order Monitoring & Sound Controls
+            document.getElementById('soundToggleBtn')?.addEventListener('click', toggleSoundAlert);
+            updateSoundButtonUi();
+            document.addEventListener('click', () => requestDesktopNotificationPermission(), { once: true });
+            
+            // Start real-time background polling every 4 seconds
+            setInterval(pollLiveOrders, 4000);
+            setTimeout(pollLiveOrders, 1000);
         })();
 
         // Safely creates or retrieves the receipt modal element

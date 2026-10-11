@@ -1,7 +1,34 @@
 const qs = (sel, parent = document) => parent.querySelector(sel);
 const qsa = (sel, parent = document) => Array.from(parent.querySelectorAll(sel));
 
-let cart = [];
+const CART_KEY = 'jammaila_cart_v1';
+const CHECKOUT_SNAPSHOT_KEY = 'jammaila_checkout_snapshot_v1';
+
+const readCartCompat = () => {
+    try {
+        const raw = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+        if (Array.isArray(raw) && raw.length) return raw;
+        const legacy = JSON.parse(localStorage.getItem('cart') || '[]');
+        return Array.isArray(legacy) ? legacy : [];
+    } catch {
+        return [];
+    }
+};
+
+const sanitizeCartItems = (rawList) => {
+    const list = Array.isArray(rawList) ? rawList : [];
+    return list.map((it) => {
+        const rawW = Number(it?.weight_kg ?? it?.weight);
+        const safeW = Number.isFinite(rawW) && rawW > 0 ? rawW : 0.20;
+        return {
+            ...it,
+            weight: safeW,
+            weight_kg: safeW,
+        };
+    });
+};
+
+let cart = sanitizeCartItems(readCartCompat());
 
 function hideLoadingOverlay() {
     try {
@@ -37,12 +64,10 @@ window.addEventListener('unhandledrejection', () => {
     hideLoadingOverlay();
 });
 
-const CART_KEY = 'jammaila_cart_v1';
-const CHECKOUT_SNAPSHOT_KEY = 'jammaila_checkout_snapshot_v1';
-
 const persistCart = () => {
     try {
         localStorage.setItem(CART_KEY, JSON.stringify(cart));
+        localStorage.setItem('cart', JSON.stringify(cart));
     } catch {
         // ignore
     }
@@ -164,11 +189,18 @@ function initCartDrawer() {
 
     const getCartTotal = () => cart.reduce((sum, it) => sum + (parsePriceToNumber(it.price) * (Number(it.qty) || 0)), 0);
 
+    const getCartTotalWeight = () => cart.reduce((sum, it) => {
+        const w = Number(it?.weight_kg ?? it?.weight ?? 0.20);
+        const safeW = Number.isFinite(w) && w > 0 ? w : 0.20;
+        return sum + (safeW * (Number(it.qty) || 1));
+    }, 0);
+
     const persistCheckoutSnapshot = () => {
         try {
             const payload = {
                 items: Array.isArray(cart) ? cart : [],
                 subtotal: getCartTotal(),
+                totalWeight: Math.round(getCartTotalWeight() * 100) / 100,
                 createdAt: new Date().toISOString()
             };
             localStorage.setItem(CHECKOUT_SNAPSHOT_KEY, JSON.stringify(payload));
@@ -185,24 +217,56 @@ function initCartDrawer() {
         if (!itemsContainer) return;
         itemsContainer.innerHTML = '';
 
+        if (!cart.length) {
+            itemsContainer.innerHTML = `
+                <div class="cart-empty-state">
+                    <div class="cart-empty-icon">🛍️</div>
+                    <h3 class="cart-empty-title">Your Bag is Empty</h3>
+                    <p class="cart-empty-text">Explore our collection of luxury skincare products to get started.</p>
+                    <button type="button" class="cart-empty-btn" onclick="document.body.classList.remove('cart-is-open'); const s = document.querySelector('#shop'); if(s) s.scrollIntoView({behavior:'smooth'});">Start Shopping</button>
+                </div>
+            `;
+            return;
+        }
+
         cart.forEach((item) => {
             const row = document.createElement('div');
             row.className = 'cart-item';
             row.setAttribute('data-cart-id', String(item.id));
 
+            const unitPriceNum = parsePriceToNumber(item.price);
+            const qtyNum = Math.max(1, Number(item.qty) || 1);
+            const lineTotalNum = unitPriceNum * qtyNum;
+
             row.innerHTML = `
-                <div class="cart-item__thumb"><img src="${String(item.img || '')}" alt="${String(item.title || 'Product')}" /></div>
-                <div class="cart-item__meta">
-                    <h3 class="cart-item__title">${String(item.title || '')}</h3>
-                    <div class="cart-item__price">${formatCurrency(parsePriceToNumber(item.price))}</div>
-                    <div class="cart-item__qty" aria-label="Quantity selector">
-                        <button type="button" class="qty-btn" data-cart-dec>−</button>
-                        <input type="number" class="qty-input" value="${String(item.qty)}" min="1" readonly>
-                        <button type="button" class="qty-btn" data-cart-inc>+</button>
-                    </div>
+                <div class="cart-item__thumb">
+                    <img src="${String(item.img || '')}" alt="${String(item.title || 'Product')}" loading="lazy" />
                 </div>
-                <div class="cart-item__actions">
-                    <button type="button" class="cart-remove-btn" data-cart-remove>Remove</button>
+                <div class="cart-item__main">
+                    <div class="cart-item__top">
+                        <h3 class="cart-item__title">${String(item.title || '')}</h3>
+                        <button type="button" class="cart-remove-btn" data-cart-remove aria-label="Remove ${String(item.title || 'item')}" title="Remove item">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            <span>Remove</span>
+                        </button>
+                    </div>
+                    <div class="cart-item__price-row">
+                        <span class="cart-item__unit-price">${formatCurrency(unitPriceNum)}</span>
+                    </div>
+                    <div class="cart-item__bottom">
+                        <div class="cart-item__qty" aria-label="Quantity selector">
+                            <button type="button" class="qty-btn qty-btn-dec" data-cart-dec aria-label="Decrease quantity" ${qtyNum <= 1 ? 'data-at-min="true"' : ''}>−</button>
+                            <span class="qty-val">${String(qtyNum)}</span>
+                            <input type="number" class="qty-input" value="${String(qtyNum)}" min="1" readonly style="display:none;">
+                            <button type="button" class="qty-btn qty-btn-inc" data-cart-inc aria-label="Increase quantity">+</button>
+                        </div>
+                        <div class="cart-item__line-total" title="Item subtotal">
+                            ${formatCurrency(lineTotalNum)}
+                        </div>
+                    </div>
                 </div>
             `;
 
@@ -216,12 +280,18 @@ function initCartDrawer() {
         const img = String(product?.img || product?.imageUrl || '').trim();
         const price = parsePriceToNumber(product?.price);
         const amount = Math.max(1, Number(qty) || 1);
+        const rawW = Number(product?.weight_kg ?? product?.weight ?? 0.20);
+        const safeWeight = Number.isFinite(rawW) && rawW > 0 ? rawW : 0.20;
 
         const existing = cart.find((it) => String(it.id) === id);
         if (existing) {
             existing.qty = Math.max(1, (Number(existing.qty) || 0) + amount);
+            if (!existing.weight || existing.weight <= 0) {
+                existing.weight = safeWeight;
+                existing.weight_kg = safeWeight;
+            }
         } else {
-            cart.push({ id, title, img, price, qty: amount });
+            cart.push({ id, title, img, price, qty: amount, weight: safeWeight, weight_kg: safeWeight });
         }
 
         persistCart();
@@ -393,6 +463,8 @@ function initShopTabs() {
     const indicator = qs('.shopTabs__indicator', tabs || document);
     if (!tabs || !track || !indicator) return;
 
+    const SELECTED_TAB_KEY = 'jammaila_selected_shop_tab';
+
     const normalizeCategory = (value) => {
         const v = String(value || '').trim().toLowerCase();
         if (v === 'all') return 'all';
@@ -436,12 +508,30 @@ function initShopTabs() {
         }
     };
 
+    const saveSelectedTab = (target) => {
+        try {
+            localStorage.setItem(SELECTED_TAB_KEY, target);
+        } catch (e) {
+            console.warn('Failed to save selected tab to localStorage', e);
+        }
+    };
+
+    const getSelectedTab = () => {
+        try {
+            return localStorage.getItem(SELECTED_TAB_KEY);
+        } catch (e) {
+            console.warn('Failed to read selected tab from localStorage', e);
+            return null;
+        }
+    };
+
     const setActiveTab = (btn) => {
         const target = normalizeCategory(btn?.getAttribute('data-target'));
         if (!target) return;
         getButtons().forEach((b) => b.classList.toggle('is-active', b === btn));
         setIndicatorToButton(btn);
         applyFilterEverywhere(target);
+        saveSelectedTab(target);
     };
 
     const applyActive = () => {
@@ -455,8 +545,17 @@ function initShopTabs() {
         setActiveTab(btn);
     });
 
-    const first = getButtons().find((b) => b.classList.contains('is-active')) || getButtons()[0];
-    if (first) setActiveTab(first);
+    // Restore selected tab from localStorage or default to first tab
+    const savedTab = getSelectedTab();
+    let buttonToActivate = null;
+    if (savedTab) {
+        buttonToActivate = getButtons().find((b) => normalizeCategory(b.getAttribute('data-target')) === normalizeCategory(savedTab));
+    }
+    buttonToActivate = buttonToActivate || getButtons().find((b) => b.classList.contains('is-active')) || getButtons()[0];
+    
+    if (buttonToActivate) {
+        setActiveTab(buttonToActivate);
+    }
 
     window.addEventListener('resize', () => {
         const active = getButtons().find((b) => b.classList.contains('is-active'));
@@ -585,7 +684,7 @@ function initStorefrontProducts() {
         );
 
     const loadStorefrontProducts = async () => {
-        const res = await fetch(`${API_BASE_URL}/api/products`);
+        const res = await fetch(`${API_BASE_URL}/products`);
         if (!res.ok) {
             throw new Error(`Unable to load products: ${res.status}`);
         }
@@ -608,8 +707,8 @@ function initStorefrontProducts() {
 
         if (!rawImage || rawImage === 'NULL') return PRODUCT_PLACEHOLDER;
         if (/^https?:\/\//i.test(rawImage)) return rawImage;
-        if (rawImage.startsWith('/uploads/')) return `${API_BASE_URL}${rawImage}`;
-        if (rawImage.startsWith('uploads/')) return `${API_BASE_URL}/${rawImage}`;
+        if (rawImage.startsWith('/uploads/')) return rawImage;
+        if (rawImage.startsWith('uploads/')) return `/${rawImage}`;
         return rawImage;
     };
 
@@ -847,6 +946,8 @@ function initStorefrontProducts() {
             card.setAttribute('data-price', String(product?.price ?? ''));
             card.setAttribute('data-title', title);
             card.setAttribute('data-img', img);
+            const cardWeight = Number(product?.weight_kg ?? product?.weight ?? 0.20);
+            card.setAttribute('data-weight', String(Number.isFinite(cardWeight) && cardWeight > 0 ? cardWeight : 0.20));
 
             card.innerHTML = `
                 <div class="pCard__media">
@@ -886,11 +987,14 @@ function initStorefrontProducts() {
             if (add) {
                 const card = e.target && e.target.closest ? e.target.closest('.pCard') : null;
                 if (!card || typeof window.__addToCart !== 'function') return;
+                const rawW = Number(card.getAttribute('data-weight'));
+                const safeW = Number.isFinite(rawW) && rawW > 0 ? rawW : 0.20;
                 window.__addToCart({
                     id: card.getAttribute('data-product-id'),
                     title: card.getAttribute('data-title') || (qs('.pTitle', card)?.textContent || ''),
                     img: card.getAttribute('data-img') || (qs('.pCard__img', card)?.getAttribute('src') || ''),
-                    price: card.getAttribute('data-price') || (qs('.pPrice', card)?.textContent || 0)
+                    price: card.getAttribute('data-price') || (qs('.pPrice', card)?.textContent || 0),
+                    weight: safeW
                 }, 1);
                 showToast('Added to Bag!');
                 return;
@@ -975,6 +1079,8 @@ function initStorefrontProducts() {
                 overlay.dataset.productTitle = String(cardTitle?.textContent || '');
                 overlay.dataset.productImg = String(cardImg?.getAttribute('src') || '');
                 overlay.dataset.productPrice = String(card.getAttribute('data-price') || cardPrice?.textContent || '0');
+                const modalWeight = Number(card.getAttribute('data-weight'));
+                overlay.dataset.productWeight = String(Number.isFinite(modalWeight) && modalWeight > 0 ? modalWeight : 0.20);
 
                 qtyInput.value = '1';
                 overlay.classList.add('is-active');
@@ -1007,12 +1113,15 @@ function initStorefrontProducts() {
 
                 submitBtn.addEventListener('click', () => {
                     const qty = Math.max(1, Number(qtyInput.value) || 1);
+                    const mw = Number(overlay.dataset.productWeight);
+                    const safeWeight = Number.isFinite(mw) && mw > 0 ? mw : 0.20;
                     if (typeof window.__addToCart === 'function') {
                         window.__addToCart({
                             id: overlay.dataset.productId,
                             title: overlay.dataset.productTitle,
                             img: overlay.dataset.productImg,
-                            price: overlay.dataset.productPrice
+                            price: overlay.dataset.productPrice,
+                            weight: safeWeight
                         }, qty);
                     }
 
@@ -1048,10 +1157,13 @@ function initStorefrontProducts() {
     const hydrateFromApiIfNeeded = () => {
         loadStorefrontProducts()
             .then((list) => {
+                console.log('[DEBUG] Raw products from API:', list);
                 const normalized = (Array.isArray(list) ? list : [])
                     .map(normalizeProductForUi)
                     .filter((p) => p && typeof p === 'object')
                     .filter((p) => p.isActive !== false);
+
+                console.log('[DEBUG] Normalized products:', normalized.map(p => ({ id: p.id, name: p.name, type: p.type, category: pickCategory(p) })));
 
                 const layer1 = normalized.filter((p) => Number(p?.storefrontLayer) !== 2);
                 const layer2 = normalized.filter((p) => Number(p?.storefrontLayer) === 2);

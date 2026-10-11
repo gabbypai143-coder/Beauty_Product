@@ -295,3 +295,61 @@ initThumbGallery();
 initVariants();
 initQuantityAndBag();
 initProductRail();
+
+function initShippingGuideModal() {
+    const modal = document.getElementById('shippingGuideModal');
+    if (!modal) return;
+
+    const openBtns = document.querySelectorAll('#openShippingGuideLink, [data-shipping-guide-open]');
+    const closeBtns = document.querySelectorAll('#closeShippingGuideBtn, #dismissShippingGuideBtn, .shipping-guide-close');
+
+    function openModal(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        modal.style.display = 'flex';
+        void modal.offsetWidth;
+        modal.classList.add('is-active');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('is-modal-open');
+    }
+
+    function closeModal(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        modal.classList.remove('is-active');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('is-modal-open');
+        setTimeout(function() {
+            if (!modal.classList.contains('is-active')) {
+                modal.style.display = 'none';
+            }
+        }, 250);
+    }
+
+    window.openShippingGuideModal = openModal;
+    window.closeShippingGuideModal = closeModal;
+
+    openBtns.forEach(function(btn) {
+        btn.addEventListener('click', openModal);
+    });
+
+    closeBtns.forEach(function(btn) {
+        btn.addEventListener('click', closeModal);
+    });
+
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeModal(e);
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.classList.contains('is-active')) {
+            closeModal(e);
+        }
+    });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initShippingGuideModal);
+} else {
+    initShippingGuideModal();
+}
