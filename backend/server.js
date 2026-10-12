@@ -267,8 +267,10 @@ app.get(
   }
 );
 
-// Serve frontend natively
-const frontendDir = path.join(__dirname, "..", "Main");
+// Serve frontend natively (prioritize modern React/Vite app with fallback to legacy Main)
+const viteFrontendDir = path.join(__dirname, "..", "frontend", "dist");
+const legacyFrontendDir = path.join(__dirname, "..", "Main");
+const frontendDir = fs.existsSync(viteFrontendDir) ? viteFrontendDir : legacyFrontendDir;
 app.use(express.static(frontendDir));
 
 const CLOUDINARY_CLOUD_NAME = String(process.env.CLOUDINARY_CLOUD_NAME || "").trim();
@@ -1824,6 +1826,21 @@ app.post(
   })
 );
 
+app.get("/admin.html", (req, res) => {
+  res.redirect("/admin");
+});
+
+app.use((req, res, next) => {
+  if ((req.method !== "GET" && req.method !== "HEAD") || req.path.startsWith("/api") || req.path.startsWith("/uploads")) {
+    return next();
+  }
+  const indexPath = path.join(frontendDir, "index.html");
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  return res.send("Backend API is running!");
+});
+
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
 
@@ -1852,10 +1869,6 @@ app.use((err, req, res, next) => {
   }
 
   return res.status(statusCode).json({ message: String(err.message || "Request failed") });
-});
-
-app.get("/", (req, res) => {
-  res.send("Backend API is running!");
 });
 
 // Initialization removed as it was causing a Prisma error with non-nullable type

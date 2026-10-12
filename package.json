@@ -6,6 +6,8 @@
   "scripts": {
     "tailwind:build": "tailwindcss -i ./Main/tailwind.input.css -o ./Main/tailwind.css --minify",
     "tailwind:watch": "tailwindcss -i ./Main/tailwind.input.css -o ./Main/tailwind.css --watch",
+    "build:frontend": "npm --prefix frontend run build",
+    "frontend:dev": "npm --prefix frontend run dev",
     "serve": "http-server ./Main -p 8080 -c-1",
     "dev": "concurrently -k -n TAILWIND,SERVER -c magenta,cyan \"npm:tailwind:watch\" \"npm:serve\"",
     "start": "npm run serve"
