@@ -82,19 +82,18 @@ function validateAdminAuthEnv() {
 
 validateAdminAuthEnv();
 
-const allowedOrigins = new Set();
-
-if (!isProd) {
-  allowedOrigins.add("http://localhost:8080");
-  allowedOrigins.add("http://127.0.0.1:8080");
-  allowedOrigins.add("http://10.0.0.199:8080");
-  allowedOrigins.add("http://localhost:3000");
-  allowedOrigins.add("http://127.0.0.1:3000");
-}
-allowedOrigins.add("https://jammailaskin-cassandra.com");
-allowedOrigins.add("https://www.jammailaskin-cassandra.com");
-allowedOrigins.add("https://beauty-product.onrender.com");
-allowedOrigins.add("https://www.beauty-product.onrender.com");
+const allowedOrigins = new Set([
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:8080",
+  "http://127.0.0.1:8080",
+  "https://jammailaskin-cassandra.com",
+  "https://www.jammailaskin-cassandra.com",
+  "https://beauty-product.onrender.com",
+  "https://www.beauty-product.onrender.com"
+]);
 
 for (const extraOrigin of EXTRA_ALLOWED_ORIGINS) {
   allowedOrigins.add(extraOrigin);
@@ -107,7 +106,15 @@ if (FRONTEND_ORIGIN) {
 const corsMiddleware = cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
-    if (allowedOrigins.has(origin)) return cb(null, true);
+    if (
+      allowedOrigins.has(origin) ||
+      origin.includes("localhost") ||
+      origin.includes("127.0.0.1") ||
+      origin.endsWith(".jammailaskin-cassandra.com") ||
+      origin === "https://jammailaskin-cassandra.com"
+    ) {
+      return cb(null, true);
+    }
     return cb(new Error(`CORS blocked for origin: ${origin}`));
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -271,7 +278,11 @@ app.get(
 const viteFrontendDir = path.join(__dirname, "..", "frontend", "dist");
 const legacyFrontendDir = path.join(__dirname, "..", "Main");
 const frontendDir = fs.existsSync(viteFrontendDir) ? viteFrontendDir : legacyFrontendDir;
-app.use(express.static(frontendDir));
+app.use(express.static(frontendDir, {
+  setHeaders: (res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+}));
 
 const CLOUDINARY_CLOUD_NAME = String(process.env.CLOUDINARY_CLOUD_NAME || "").trim();
 const CLOUDINARY_API_KEY = String(process.env.CLOUDINARY_API_KEY || "").trim();
