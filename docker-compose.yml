@@ -1,0 +1,81 @@
+services:
+  # 1. Frontend Web Service (React / Vite + Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME:-beauty_product}_frontend
+    restart: unless-stopped
+    ports:
+      # Binds strictly to 127.0.0.1:3002 on host (safe for production reverse proxy)
+      - "127.0.0.1:${FRONTEND_PORT:-3002}:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  # 2. Backend Webserver / API (Node.js + Express + Prisma)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME:-beauty_product}_backend
+    restart: unless-stopped
+    ports:
+      # Binds strictly to 127.0.0.1:8092 on host (safe for production reverse proxy)
+      - "127.0.0.1:${BACKEND_PORT:-8092}:80"
+    environment:
+      - PORT=80
+      - NODE_ENV=production
+      - FRONTEND_ORIGIN=${FRONTEND_ORIGIN:-http://localhost:3002}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://127.0.0.1:3002,http://localhost:3002}
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_DATABASE=${DB_DATABASE:-beauty_product_db}
+      - DB_USERNAME=${DB_USERNAME:-app_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secret_password}
+      - DATABASE_URL=${DATABASE_URL:-mysql://${DB_USERNAME:-app_user}:${DB_PASSWORD:-secret_password}@${DB_HOST:-db}:3306/${DB_DATABASE:-beauty_product_db}}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH:-}
+      - JWT_SECRET=${JWT_SECRET:-supersecretjwtkey}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-}
+      - MAIL_MAILER=${MAIL_MAILER:-smtp}
+      - MAIL_HOST=${MAIL_HOST:-smtp.gmail.com}
+      - MAIL_PORT=${MAIL_PORT:-465}
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - MAIL_ENCRYPTION=${MAIL_ENCRYPTION:-ssl}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-"Jammaila Skin"}
+    volumes:
+      - uploads_data:/app/public/uploads
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  # 3. Database (Internal only - no host port binding)
+  db:
+    image: mysql:8.0
+    container_name: ${PROJECT_NAME:-beauty_product}_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
+      MYSQL_DATABASE: ${DB_DATABASE:-beauty_product_db}
+      MYSQL_USER: ${DB_USERNAME:-app_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret_password}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:
+  uploads_data:
