@@ -5,7 +5,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: ${PROJECT_NAME:-beauty_product}_frontend
-    restart: unless-stopped
+    restart: always
     ports:
       # Binds strictly to 127.0.0.1:3002 on host (safe for production reverse proxy)
       - "127.0.0.1:${FRONTEND_PORT:-3002}:80"
@@ -20,7 +20,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: ${PROJECT_NAME:-beauty_product}_backend
-    restart: unless-stopped
+    restart: always
     ports:
       # Binds strictly to 127.0.0.1:8092 on host (safe for production reverse proxy)
       - "127.0.0.1:${BACKEND_PORT:-8092}:80"
@@ -61,7 +61,7 @@ services:
   db:
     image: mysql:8.0
     container_name: ${PROJECT_NAME:-beauty_product}_db
-    restart: unless-stopped
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
       MYSQL_DATABASE: ${DB_DATABASE:-beauty_product_db}
